@@ -152,6 +152,7 @@
             height: 100%;
             background: linear-gradient(90deg, #22d3ee, #fbbf24);
             animation: progressFill 4s ease-in-out 2.2s forwards;
+            transition: width 0.3s ease; /* Para actualizaciones fluidas */
         }
 
         .loader-text {
@@ -214,9 +215,9 @@
 
         <div class="loader-section">
             <div class="progress-container">
-                <div class="progress-bar"></div>
+                <div id="progress-bar" class="progress-bar"></div>
             </div>
-            <div class="loader-text">Initializing Systems...</div>
+            <div id="loader-text" class="loader-text">Initializing Systems...</div>
         </div>
     </div>
 
@@ -283,6 +284,31 @@
                 e.preventDefault();
             }
         }, { passive: false });
+
+        // Función para actualizar desde Python
+        function updateStatus(text, progress) {
+            const textEl = document.getElementById('loader-text');
+            const barEl = document.getElementById('progress-bar');
+            
+            if (textEl) {
+                textEl.innerText = text;
+                textEl.style.animation = 'none'; // Detener animaciones viejas
+                textEl.style.opacity = '1';
+                textEl.style.transform = 'translateY(0)';
+            }
+            
+            if (barEl) {
+                barEl.style.animation = 'none'; // Detener el autocompletado
+                barEl.style.width = progress + '%';
+            }
+
+            // Mostrar la sección de loader si estaba oculta
+            const loaderSec = document.querySelector('.loader-section');
+            if (loaderSec) {
+                loaderSec.style.opacity = '1';
+                loaderSec.style.animation = 'none';
+            }
+        }
     </script>
     <!-- ============================================================ -->
 </body>

@@ -3,8 +3,12 @@ import json
 import os
 import sys
 import urllib.parse
+import urllib.request
 import time
 import queue
+import zipfile
+import io
+import subprocess
 
 # --- Cola global para logs en tiempo real y tracking de requests ---
 log_queue = queue.Queue(maxsize=500)
@@ -216,7 +220,7 @@ if __name__ == '__main__':
         server_thread.start()
 
         app = QApplication(sys.argv)
-
+ 
         class SplashWindow(QMainWindow):
             def __init__(self, html_file, width, height):
                 super().__init__()
@@ -239,8 +243,153 @@ if __name__ == '__main__':
                 self.web_view.load(local_url)
                 self.web_view.setZoomFactor(1.0)
                 
-                # Timer para cerrar el splash y abrir la main
-                QTimer.singleShot(6000, self.start_main_app)
+                self.web_view.loadFinished.connect(self.on_load_finished)
+
+            def on_load_finished(self, ok):
+                if ok:
+                    QTimer.singleShot(2500, self.run_update_check)
+
+            def run_update_check(self):
+                # Usar un thread para no congelar el splash
+                thread = threading.Thread(target=self.threaded_check, daemon=True)
+                thread.start()
+
+            def threaded_check(self):
+                try:
+                    self.update_ui("Checking for updates...", 30)
+                    
+                    # Cargar versión local
+                    version_path = os.path.join(DATA_DIR, "version.json")
+                    local_version = "0.0.0"
+                    if os.path.exists(version_path):
+                        with open(version_path, 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                            local_version = data.get("version", "0.0.0")
+
+                    # Consultar GitHub API
+                    repo = "Android-Play01/FGCOverlay-Caster"
+                    url = f"https://api.github.com/repos/{repo}/releases/latest"
+                    
+                    req = urllib.request.Request(url)
+                    req.add_header('User-Agent', 'FGC-Overlay-Updater')
+                    
+                    with urllib.request.urlopen(req, timeout=5) as response:
+                        data = json.loads(response.read().decode())
+                        latest_version = data.get("tag_name", "v0.0.0").replace("v", "")
+                        
+                        if latest_version > local_version:
+                            self.update_ui(f"New update found: v{latest_version}", 50)
+                            
+                            # Buscar el archivo .zip en los assets del release
+                            assets = data.get("assets", [])
+                            zip_url = None
+                            for asset in assets:
+                                if asset.get("name", "").endswith(".zip"):
+                                    zip_url = asset.get("browser_download_url")
+                                    break
+                            
+                            if zip_url:
+                                time.sleep(1)
+                                self.update_ui("Downloading update...", 60)
+                                self.download_and_apply_update(zip_url)
+                                return # Sale aquí porque se cerrará el programa para actualizar
+                            else:
+                                self.update_ui("Update error (No ZIP)", 100)
+                                time.sleep(1)
+                        else:
+                            self.update_ui("Systems ready", 100)
+                            time.sleep(1)
+
+                except Exception as e:
+                    print(f"Update check failed: {e}")
+                    self.update_ui("Connection error - Skipping update", 100)
+                    time.sleep(1)
+                
+                # Volver al hilo principal para abrir la app
+                QTimer.singleShot(0, self.start_main_app)
+
+            def download_and_apply_update(self, zip_url):
+                try:
+                    zip_path = os.path.join(DATA_DIR, "update.zip")
+                    req = urllib.request.Request(zip_url)
+                    req.add_header('User-Agent', 'FGC-Overlay-Updater')
+                    
+                    with urllib.request.urlopen(req) as response, open(zip_path, 'wb') as out_file:
+                        file_size = int(response.getheader('Content-Length', 0))
+                        downloaded = 0
+                        block_size = 1024 * 8
+                        while True:
+                            buffer = response.read(block_size)
+                            if not buffer:
+                                break
+                            downloaded += len(buffer)
+                            out_file.write(buffer)
+                            if file_size > 0:
+                                percent = min(99, 60 + int((downloaded / file_size) * 35))
+                                self.update_ui(f"Downloading update {int((downloaded / file_size) * 100)}%", percent)
+                    
+                    self.update_ui("Applying update...", 100)
+                    time.sleep(0.5)
+
+                    batch_path = os.path.join(DATA_DIR, "updater.bat")
+                    
+                    # El .bat cierra el proceso actual, extrae el ZIP buscando el .exe y lo copia a la raíz, limpia y reinicia.
+                    bat_content = f"""@echo off
+title Updating FGC Overlay...
+echo Updating FGC Overlay... Please wait.
+timeout /t 3 /nobreak > nul
+
+if exist "update_temp" rmdir /s /q "update_temp"
+mkdir "update_temp"
+
+echo Extracting update...
+powershell -Command "Expand-Archive -Path 'update.zip' -DestinationPath 'update_temp' -Force"
+
+echo Replacing files...
+:: Buscamos la carpeta que contiene el .exe dentro de todo lo extraído.
+for /d /r "update_temp" %%d in (*) do (
+    if exist "%%d\\FGCOverlay-Caster.exe" (
+        xcopy "%%d\\*" "%CD%" /s /e /y /q > nul
+        goto cleanup
+    )
+)
+:: Por si los archivos están en la raíz de update_temp directamente
+if exist "update_temp\\FGCOverlay-Caster.exe" (
+    xcopy "update_temp\\*" "%CD%" /s /e /y /q > nul
+)
+
+:cleanup
+echo Cleaning up...
+rmdir /s /q "update_temp"
+del /f /q update.zip
+
+echo Restarting app...
+start "" "FGCOverlay-Caster.exe"
+del "%~f0"
+"""
+                    with open(batch_path, 'w', encoding='utf-8') as f:
+                        f.write(bat_content)
+
+                    # Iniciar el script batch de forma oculta y salir
+                    if sys.platform == "win32":
+                        CREATE_NO_WINDOW = 0x08000000
+                        subprocess.Popen([batch_path], creationflags=CREATE_NO_WINDOW, close_fds=True, cwd=DATA_DIR)
+                    else:
+                        subprocess.Popen([batch_path], close_fds=True, cwd=DATA_DIR)
+                    
+                    # Salir para permitir la instalación
+                    os._exit(0)
+                        
+                except Exception as e:
+                    print(f"Failed to download or apply update: {e}")
+                    self.update_ui("Update failed - Starting...", 100)
+                    time.sleep(1)
+                    QTimer.singleShot(0, self.start_main_app)
+
+
+            def update_ui(self, text, progress):
+                js = f"if(typeof updateStatus === 'function') updateStatus('{text}', {progress});"
+                self.web_view.page().runJavaScript(js)
 
             def start_main_app(self):
                 self.main_win = MainWindow("gui_main.html", 1466, 841)
