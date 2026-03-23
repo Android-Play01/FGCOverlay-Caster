@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>FGC Controller Dock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Segoe+UI&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg-dark: #151515;
+        --panel-bg: #1e1e1e;
+        --accent: #00bcd4;
+        --accent-hover: #26c6da;
+        --text-main: #eee;
+        --border: #444;
+        --danger: #ff5252;
+        --success: #4caf50;
+        --warning: #ff9800;
+    }
+
+    * { box-sizing: border-box; outline: none; user-select: none; }
+
+    body {
+        margin: 0;
+        padding: 5px;
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        font-family: 'Segoe UI', sans-serif;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 0px;
+    }
+
+    /* --- BOTÓN REPORTAR (vive en el mismo slot que ACTUALIZAR) --- */
+    #btn-report {
+        background: rgba(76, 175, 80, 0.08);
+        border: 1px solid #1b3a1e;
+        color: #1b3a1e;
+        padding: 4px 0;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        cursor: not-allowed;
+        text-transform: uppercase;
+        font-family: 'Montserrat', sans-serif;
+        transition: all 0.3s;
+        width: 100%;
+        text-align: center;
+        height: 22px;
+        display: none; /* oculto por defecto, alterna con btn-update-stream */
+    }
+    #btn-report.ready {
+        background: rgba(76, 175, 80, 0.15);
+        border-color: var(--success);
+        color: var(--success);
+        cursor: pointer;
+        display: block;
+        animation: pulse-green 1.2s infinite, pulse-green-glow 1.2s infinite;
+    }
+    #btn-report.ready:hover { background: rgba(76, 175, 80, 0.35); }
+    #btn-report.ready:active { transform: scale(0.95); }
+
+    @keyframes pulse-green {
+        0%   { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.8); }
+        60%  { box-shadow: 0 0 0 8px rgba(76, 175, 80, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+    }
+    @keyframes pulse-green-glow {
+        0%   { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
+        50%  { background: rgba(76, 175, 80, 0.40); color: #a5d6a7; }
+        100% { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
+    }
+
+    /* --- BOTÓN INICIAR PARTIDA --- */
+    #btn-start-match {
+        background: rgba(229, 57, 53, 0.08);
+        border: 1px solid #3a1212;
+        color: #3a1212;
+        padding: 4px 0;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        cursor: not-allowed;
+        text-transform: uppercase;
+        font-family: 'Montserrat', sans-serif;
+        transition: all 0.3s;
+        width: 100%;
+        text-align: center;
+        height: 22px;
+        display: none;
+    }
+    #btn-start-match.ready {
+        background: rgba(229, 57, 53, 0.15);
+        border-color: #e53935;
+        color: #e53935;
+        cursor: pointer;
+        display: block;
+        animation: pulse-red 1.2s infinite, pulse-red-glow 1.2s infinite;
+    }
+    #btn-start-match.ready:hover { background: rgba(229, 57, 53, 0.35); }
+    #btn-start-match.ready:active { transform: scale(0.95); }
+
+    @keyframes pulse-red {
+        0%   { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.8); }
+        60%  { box-shadow: 0 0 0 8px rgba(229, 57, 53, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
+    }
+    @keyframes pulse-red-glow {
+        0%   { background: rgba(229, 57, 53, 0.15); color: #e53935; }
+        50%  { background: rgba(229, 57, 53, 0.40); color: #ef9a9a; }
+        100% { background: rgba(229, 57, 53, 0.15); color: #e53935; }
+    }
+
+    /* --- DOCK LAYOUT --- */
+    .dock-container {
+        width: 100%;
+        background: var(--bg-dark);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    /* Barra Superior (Presets) */
+    .preset-row {
+        display: flex; gap: 4px; justify-content: center; padding-bottom: 5px;
+        border-bottom: 1px solid #2a2a2a;
+        flex-wrap: wrap;
+    }
+
+    .preset-btn {
+        background: transparent; border: 1px solid #2a2a2a; color: #666;
+        font-size: 10px; padding: 2px 8px; cursor: pointer; border-radius: 4px;
+        transition: 0.2s; font-family: 'Montserrat', sans-serif; font-weight: 700;
+    }
+    .preset-btn:hover { border-color: #666; color: #ddd; background: #1a1a1a; }
+    .preset-btn.btn-w { border-color: rgba(0,188,212,0.4); color: var(--accent); opacity: 0.8; }
+    .preset-btn.btn-w:hover { background: rgba(0, 188, 212, 0.15); opacity: 1; }
+    .preset-btn.btn-l { border-color: rgba(255,152,0,0.4); color: var(--warning); opacity: 0.8; }
+    .preset-btn.btn-l:hover { background: rgba(255,152,0,0.15); opacity: 1; }
+    .preset-btn.btn-g { border-color: rgba(224,64,251,0.4); color: #e040fb; opacity: 0.8; }
+    .preset-btn.btn-g:hover { background: rgba(224,64,251,0.15); opacity: 1; }
+    .preset-btn.fmt-active { background: rgba(0,188,212,0.25); border-color: var(--accent); color: var(--accent); opacity: 1; }
+    .preset-btn.link-active { background: rgba(255,152,0,0.18); border-color: var(--warning); color: var(--warning); opacity: 1; }
+
+    .preset-sep { width: 1px; background: #2a2a2a; margin: 0 4px; align-self: stretch; }
+
+    /* Área Principal (Horizontal) */
+    .dock-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    /* Grupos de Controles (Cajas) */
+    .dock-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: #1a1a1a;
+        padding: 6px;
+        border-radius: 6px;
+        border: 1px solid #2a2a2a;
+        height: 50px;
+        position: relative;
+    }
+
+    .center-group {
+        flex-direction: column;
+        height: auto;
+        padding: 5px;
+        gap: 4px;
+        background: #0f0f0f;
+        border: 1px solid #1a1a1a;
+    }
+
+    /* --- BOTONES Y CONTROLES --- */
+    .ctrl-btn {
+        background: #222;
+        border: 1px solid #333;
+        color: #eee;
+        width: 30px;
+        height: 30px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex; justify-content: center; align-items: center;
+        font-weight: bold;
+        font-size: 14px;
+        transition: 0.1s;
+        font-family: 'Montserrat', sans-serif;
+    }
+    .ctrl-btn:hover { background: #2a2a2a; border-color: #555; }
+    .ctrl-btn:active { transform: scale(0.95); }
+
+    .btn-green { color: #4caf50; border-color: #1b3a1e; background: rgba(76, 175, 80, 0.08); }
+    .btn-green:hover { background: rgba(76, 175, 80, 0.25); }
+
+    .btn-red { color: #f44336; border-color: #3a1212; background: rgba(244, 67, 54, 0.08); }
+    .btn-red:hover { background: rgba(244, 67, 54, 0.25); }
+
+    .btn-blue { color: #2196f3; border-color: #0d2a4a; background: rgba(33, 150, 243, 0.08); width: auto; padding: 0 6px; font-size: 11px; height: 28px; }
+    .btn-blue:hover { background: rgba(33, 150, 243, 0.25); }
+
+    .btn-swap { font-size: 14px; color: var(--accent); width: 30px; height: 25px; }
+
+    /* --- INPUTS --- */
+    .dock-input {
+        background: #080808;
+        border: 1px solid #2a2a2a;
+        color: white;
+        padding: 0 8px;
+        height: 30px;
+        border-radius: 4px;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 13px;
+        width: 130px;
+        transition: border-color 0.2s, background-color 0.2s;
+    }
+    .dock-input:focus { border-color: var(--accent); }
+    .dock-input.pending { border-color: var(--warning); background: #1a1200; color: #ffb74d; }
+
+    .score-display {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 900;
+        font-size: 20px;
+        width: 30px;
+        text-align: center;
+        color: #fff;
+    }
+
+    .round-input {
+        width: 160px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-align: center;
+        margin: 2px 0;
+        font-size: 11px;
+    }
+
+    .tournament-input {
+        width: 130px;
+        height: 18px;
+        font-size: 10px;
+        font-weight: bold;
+        text-align: center;
+        border-color: rgba(0,188,212,0.4);
+    }
+    .tournament-input:focus {
+        border-color: var(--accent);
+    }
+
+    /* --- BOTÓN UPDATE --- */
+    .btn-update {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        color: #444;
+        padding: 4px 0;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        cursor: default;
+        transition: 0.3s;
+        width: 100%;
+        text-align: center;
+        height: 22px;
+        font-family: 'Montserrat', sans-serif;
+    }
+    .btn-update.active {
+        background: var(--warning);
+        color: #000;
+        border-color: #ffb74d;
+        cursor: pointer;
+        animation: pulse 1.2s infinite, pulse-glow 1.2s infinite;
+    }
+    @keyframes pulse {
+        0%   { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.8); }
+        60%  { box-shadow: 0 0 0 8px rgba(255, 152, 0, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+    }
+    @keyframes pulse-glow {
+        0%   { background: #ff9800; color: #000; }
+        50%  { background: #ffe082; color: #000; }
+        100% { background: #ff9800; color: #000; }
+    }
+
+    #status-bar {
+        margin-top: auto;
+        font-size: 9px;
+        color: #333;
+        width: 100%;
+        text-align: center;
+        padding-top: 2px;
+    }
+
+    /* --- SISTEMA DE RECURSOS (Banderas, Escudos, Redes) --- */
+    .separator-line {
+        color: #333;
+        font-size: 16px;
+        font-weight: 300;
+        margin: 0 2px;
+        user-select: none;
+    }
+
+    /* Botón genérico de recurso */
+    .res-btn {
+        height: 30px;
+        background: #0a0a0a;
+        border: 1px solid #333;
+        border-radius: 3px;
+        cursor: pointer;
+        padding: 0 4px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: 0.2s;
+        position: relative;
+        gap: 3px;
+        flex-shrink: 0;
+    }
+    .res-btn:hover { border-color: var(--accent); }
+    .res-btn.pending { border-color: var(--warning); }
+
+    /* Bandera: más ancha que alta */
+    .flag-btn { width: 34px; }
+    .flag-btn img { width: 100%; height: 22px; object-fit: cover; border-radius: 1px; }
+
+    /* Escudo: cuadrado */
+    .shield-btn { width: 30px; }
+    .shield-btn img { width: 22px; height: 22px; object-fit: contain; }
+
+    /* Red social: cuadrado */
+    .social-btn { width: 30px; }
+    .social-btn img { width: 20px; height: 20px; object-fit: contain; }
+
+    .res-placeholder { font-size: 9px; color: #444; font-weight: bold; }
+
+    /* --- MENÚ FLOTANTE GENÉRICO --- */
+    .res-menu {
+        position: absolute;
+        top: 0;
+        width: 110px;
+        background: #1a1a1a;
+        border: 1px solid var(--accent);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.9);
+        border-radius: 5px;
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        z-index: 9999;
+    }
+    .res-menu.menu-left  { right: calc(100% + 8px); }
+    .res-menu.menu-right { left: calc(100% + 8px); }
+
+    .res-search {
+        background: #0d0d0d;
+        border: 1px solid #333;
+        color: white;
+        font-size: 10px;
+        width: 100%;
+        padding: 4px 6px;
+        border-radius: 3px;
+        font-family: 'Segoe UI', sans-serif;
+    }
+    .res-search:focus { border-color: var(--accent); outline: none; }
+
+    .res-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        max-height: 180px;
+        overflow-y: auto;
+    }
+    .res-grid.single-col { grid-template-columns: 1fr; }
+
+    .res-option {
+        width: 100%;
+        height: 28px;
+        cursor: pointer;
+        border: 1px solid #2a2a2a;
+        opacity: 0.7;
+        background: #0a0a0a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 2px;
+        transition: 0.15s;
+        gap: 4px;
+        padding: 0 4px;
+        font-size: 9px;
+        color: #666;
+        overflow: hidden;
+    }
+    .res-option:hover { opacity: 1; border-color: var(--accent); background: #111; color: #aaa; }
+    .res-option img { max-width: 100%; max-height: 20px; object-fit: contain; }
+    .res-option.none-opt { color: #444; font-size: 10px; font-weight: bold; }
+    .res-option.none-opt:hover { color: var(--danger); border-color: var(--danger); }
+
+    /* Scrollbar */
+    .res-grid::-webkit-scrollbar { width: 3px; }
+    .res-grid::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+    /* --- SIDE PANEL (Overlays) --- */
+    #overlay-panel {
+        position: fixed;
+        top: 0;
+        right: -250px;
+        width: 250px;
+        height: 100vh;
+        background: var(--bg-dark);
+        border-left: 1px solid var(--accent);
+        box-shadow: -4px 0 15px rgba(0,0,0,0.8);
+        transition: right 0.3s ease;
+        z-index: 10000;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    #overlay-panel.open {
+        right: 0;
+    }
+    #overlay-panel .close-btn {
+        align-self: flex-end;
+        background: none;
+        border: none;
+        color: var(--text-main);
+        font-size: 14px;
+        cursor: pointer;
+        padding: 5px;
+    }
+    #overlay-panel .close-btn:hover {
+        color: var(--danger);
+    }
+    #overlay-select {
+        background: #0d0d0d;
+        border: 1px solid #333;
+        color: white;
+        padding: 8px;
+        border-radius: 4px;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 12px;
+        width: 100%;
+        cursor: pointer;
+    }
+    #overlay-select:focus {
+        border-color: var(--accent);
+        outline: none;
+    }
+
+    /* Toggle switch animación */
+    .anim-toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid #1e1e1e;
+        font-size: 11px;
+        color: #aaa;
+    }
+    .toggle-switch {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        flex-shrink: 0;
+    }
+    .toggle-switch input { display: none; }
+    .toggle-slider {
+        position: absolute; inset: 0;
+        background: #333;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.25s;
+    }
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        width: 14px; height: 14px;
+        left: 3px; top: 3px;
+        background: #888;
+        border-radius: 50%;
+        transition: transform 0.25s, background 0.25s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: rgba(0,188,212,0.25); border: 1px solid rgba(0,188,212,0.5); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); background: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="dock-container">
+    <!-- BARRA DE PRESETS -->
+    <div class="preset-row">
+        <!-- Tournament Name -->
+        <input type="text" id="dock-tournament-name" class="dock-input tournament-input" placeholder="Nombre del Torneo" oninput="markDirty()">
+        <div class="preset-sep"></div>
+        <!-- Winners -->
+        <button class="preset-btn btn-w" onclick="setPresetRound('Winners Semi-Finals')">W Semis</button>
+        <button class="preset-btn btn-w" onclick="setPresetRound('Winners Finals')">W Finals</button>
+        <div class="preset-sep"></div>
+        <!-- Losers -->
+        <button class="preset-btn btn-l" onclick="setPresetRound('Losers Semi-Finals')">L Semis</button>
+        <button class="preset-btn btn-l" onclick="setPresetRound('Losers Finals')">L Finals</button>
+        <div class="preset-sep"></div>
+        <!-- Grand -->
+        <button class="preset-btn btn-g" onclick="setPresetRound('Grand Finals')">GF</button>
+        <button class="preset-btn btn-g" onclick="setPresetRound('Extra Grand Finals')">Extra GF</button>
+        <div class="preset-sep"></div>
+        <!-- Formato FT / BO -->
+        <button class="preset-btn" id="btn-fmt-ft" onclick="setFormat('FT')">FT</button>
+        <button class="preset-btn" id="btn-fmt-bo" onclick="setFormat('BO')">BO</button>
+        <div class="preset-sep"></div>
+        <!-- Link toggle -->
+        <button class="preset-btn" id="btn-fmt-link" onclick="toggleFormatLink()" title="Pegado: el formato se une al round · Separado: van en capas distintas">⛓ Pegado</button>
+        <div class="preset-sep"></div>
+        <!-- Overlay Settings -->
+        <button class="preset-btn" id="btn-overlay-settings" onclick="toggleOverlayPanel()" title="Settings" style="display: flex; align-items: center; justify-content: center; padding: 0 4px;">
+            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'/></svg>
+        </button>
+    </div>
+
+    <div class="dock-content">
+
+        <!-- ===== P1 (IZQUIERDA) ===== -->
+        <div class="dock-group">
+
+            <!-- Bandera P1 -->
+            <div style="position:relative">
+                <button class="res-btn flag-btn" id="btn-flag-p1" onclick="toggleMenu('flag','p1')">
+                    <img id="img-flag-p1" src="" alt="">
+                </button>
+                <div class="res-menu menu-left" id="menu-flag-p1">
+                    <input type="text" class="res-search" placeholder="Buscar país..." oninput="filterMenu('flag','p1',this.value)">
+                    <div class="res-grid" id="grid-flag-p1"></div>
+                </div>
+            </div>
+
+            <!-- Escudo P1 -->
+            <div style="position:relative">
+                <button class="res-btn shield-btn" id="btn-shield-p1" onclick="toggleMenu('shield','p1')">
+                    <img id="img-shield-p1" src="" alt="" style="display:none">
+                    <span class="res-placeholder" id="ph-shield-p1">ESC</span>
+                </button>
+                <div class="res-menu menu-left" id="menu-shield-p1">
+                    <input type="text" class="res-search" placeholder="Buscar escudo..." oninput="filterMenu('shield','p1',this.value)">
+                    <div class="res-grid" id="grid-shield-p1"></div>
+                </div>
+            </div>
+
+            <!-- Red Social P1 -->
+            <div style="position:relative">
+                <button class="res-btn social-btn" id="btn-social-p1" onclick="toggleMenu('social','p1')">
+                    <img id="img-social-p1" src="" alt="" style="display:none">
+                    <span class="res-placeholder" id="ph-social-p1">@</span>
+                </button>
+                <div class="res-menu menu-left" id="menu-social-p1">
+                    <input type="text" class="res-search" placeholder="Buscar red..." oninput="filterMenu('social','p1',this.value)">
+                    <div class="res-grid single-col" id="grid-social-p1"></div>
+                </div>
+            </div>
+
+            <span class="separator-line">|</span>
+            <button class="ctrl-btn btn-blue" onclick="addTag('p1','W')">W</button>
+            <button class="ctrl-btn btn-red" style="width:auto;padding:0 6px" onclick="addTag('p1','L')">L</button>
+            <input type="text" class="dock-input" id="dock-p1-name" placeholder="Player 1" value="Player 1" oninput="markDirty()">
+            <button class="ctrl-btn btn-green" onclick="adjustScore('p1',1)">+</button>
+            <div class="score-display" id="dock-p1-score">0</div>
+            <button class="ctrl-btn btn-red" onclick="adjustScore('p1',-1)">-</button>
+        </div>
+
+        <!-- ===== CENTRO ===== -->
+        <div class="dock-group center-group">
+            <div style="display:flex;gap:5px;width:100%;justify-content:center;">
+                <button class="ctrl-btn btn-swap" title="Intercambiar" onclick="swapPlayers()">⇄</button>
+                <button class="ctrl-btn btn-red" title="Reset 0-0" style="width:30px;height:25px;font-size:11px;letter-spacing:-1px" onclick="resetScores()">00</button>
+                <button class="ctrl-btn" id="btn-toggle-eye" title="Mostrar/Ocultar Overlays" style="width:30px;height:25px;padding:0;display:flex;align-items:center;justify-content:center;color:var(--accent);border-color:rgba(0,188,212,0.4);" onclick="toggleGlobalVisibility()">
+                    <svg id="icon-eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg id="icon-eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </button>
+            </div>
+            <input type="text" class="dock-input round-input" id="dock-round" placeholder="Round Info" value="Grand Finals" oninput="markDirty()">
+            <button id="btn-update-stream" class="btn-update" onclick="commitChanges()">ACTUALIZAR</button>
+            <button id="btn-report" onclick="reportMatch()">⚡ REPORTAR A R1</button>
+            <button id="btn-start-match" onclick="startMatch()">⚡ INICIAR PARTIDA</button>
+        </div>
+
+        <!-- ===== P2 (DERECHA) ===== -->
+        <div class="dock-group">
+            <button class="ctrl-btn btn-green" onclick="adjustScore('p2',1)">+</button>
+            <div class="score-display" id="dock-p2-score">0</div>
+            <button class="ctrl-btn btn-red" onclick="adjustScore('p2',-1)">-</button>
+            <input type="text" class="dock-input" id="dock-p2-name" placeholder="Player 2" value="Player 2" oninput="markDirty()">
+            <button class="ctrl-btn btn-blue" onclick="addTag('p2','W')">W</button>
+            <button class="ctrl-btn btn-red" style="width:auto;padding:0 6px" onclick="addTag('p2','L')">L</button>
+            <span class="separator-line">|</span>
+
+            <!-- Red Social P2 -->
+            <div style="position:relative">
+                <button class="res-btn social-btn" id="btn-social-p2" onclick="toggleMenu('social','p2')">
+                    <img id="img-social-p2" src="" alt="" style="display:none">
+                    <span class="res-placeholder" id="ph-social-p2">@</span>
+                </button>
+                <div class="res-menu menu-right" id="menu-social-p2">
+                    <input type="text" class="res-search" placeholder="Buscar red..." oninput="filterMenu('social','p2',this.value)">
+                    <div class="res-grid single-col" id="grid-social-p2"></div>
+                </div>
+            </div>
+
+            <!-- Escudo P2 -->
+            <div style="position:relative">
+                <button class="res-btn shield-btn" id="btn-shield-p2" onclick="toggleMenu('shield','p2')">
+                    <img id="img-shield-p2" src="" alt="" style="display:none">
+                    <span class="res-placeholder" id="ph-shield-p2">ESC</span>
+                </button>
+                <div class="res-menu menu-right" id="menu-shield-p2">
+                    <input type="text" class="res-search" placeholder="Buscar escudo..." oninput="filterMenu('shield','p2',this.value)">
+                    <div class="res-grid" id="grid-shield-p2"></div>
+                </div>
+            </div>
+
+            <!-- Bandera P2 -->
+            <div style="position:relative">
+                <button class="res-btn flag-btn" id="btn-flag-p2" onclick="toggleMenu('flag','p2')">
+                    <img id="img-flag-p2" src="" alt="">
+                </button>
+                <div class="res-menu menu-right" id="menu-flag-p2">
+                    <input type="text" class="res-search" placeholder="Buscar país..." oninput="filterMenu('flag','p2',this.value)">
+                    <div class="res-grid" id="grid-flag-p2"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="status-bar">Ready · FGC Controller</div>
+
+<div id="overlay-panel">
+    <button class="close-btn" onclick="toggleOverlayPanel()">✕</button>
+    <h3 style="margin: 0; font-size: 14px; border-bottom: 1px solid #333; padding-bottom: 5px;">Seleccionar Overlay</h3>
+    <select id="overlay-select" onchange="loadOverlayConfig()">
+        <option value="">-- Cargando... --</option>
+    </select>
+    <div class="anim-toggle-row">
+        <span>Animación al Intercambiar</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="chk-swap-anim" checked onchange="state.swapAnimEnabled = this.checked">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+    <div class="anim-toggle-row">
+        <span>Animación al Iniciar Partida</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="chk-update-anim" onchange="state.updateAnimEnabled = this.checked">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+</div>
+
+<script>
+    // =====================================================
+    //  CANAL DE COMUNICACIÓN
+    // =====================================================
+    const channel = new BroadcastChannel('fgc_channel');
+
+    channel.onmessage = (event) => {
+        const { type, payload } = event.data;
+
+        if (type === 'LOAD_MATCH') {
+            loadMatch(payload);
+        }
+        // PLAYERS_UPDATE: actualizar recursos si ya hay una partida activa con esos jugadores
+        if (type === 'PLAYERS_UPDATE') {
+            // Solo actualiza si hay coincidencia con la partida activa
+            // (se delega a loadMatch si se necesita)
+        }
+        if (type === 'REQUEST_STATE') {
+            channel.postMessage({ type: 'TOGGLE_VISIBILITY', payload: { isVisible: state.overlaysVisible } });
+        }
+    };
+
+    // =====================================================
+    //  ESTADO
+    // =====================================================
+    const state = {
+        dirty: false,
+        overlaysVisible: true,
+        swapped: false,
+        updateAnimEnabled: false,
+        swapAnimEnabled: true,
+        p1Score: 0,
+        p2Score: 0,
+        activeMatchId: null,
+        activeRound: '',
+        requiredScore: null,
+        p1: { flag: 'do', shield: '', social: '', socialHandle: '' },
+        p2: { flag: 'do', shield: '', social: '', socialHandle: '' }
+    };
+
+    let currentOverlayFile = '';
+    let pendingMatchPayload = null; // Guarda el payload hasta que el usuario confirme con INICIAR PARTIDA
+
+    // =====================================================
+    //  RECURSOS — llenar con tus archivos reales
+    // =====================================================
+    const RESOURCES = {
+        flags: [
+            { code: 'do', name: 'Republica Dominicana' }, { code: 'pe', name: 'Peru' },
+            { code: 've', name: 'Venezuela' }, { code: 'cl', name: 'Chile' },
+            { code: 'us', name: 'USA' }, { code: 'jp', name: 'Japon' },
+            { code: 'mx', name: 'Mexico' }, { code: 'br', name: 'Brasil' },
+            { code: 'pr', name: 'Puerto Rico' }, { code: 'kr', name: 'Corea' },
+            { code: 'cn', name: 'China' }, { code: 'fr', name: 'Francia' },
+            { code: 'es', name: 'España' }, { code: 'ca', name: 'Canada' },
+            { code: 'gb', name: 'Reino Unido' }, { code: 'uk', name: 'Reino Unido UK' },
+            { code: 'ar', name: 'Argentina' }, { code: 'bo', name: 'Bolivia' },
+            { code: 'co', name: 'Colombia' }, { code: 'cr', name: 'Costa Rica' },
+            { code: 'cu', name: 'Cuba' }, { code: 'ec', name: 'Ecuador' },
+            { code: 'gt', name: 'Guatemala' }, { code: 'hn', name: 'Honduras' },
+            { code: 'ni', name: 'Nicaragua' }, { code: 'pa', name: 'Panama' },
+            { code: 'py', name: 'Paraguay' }, { code: 'sv', name: 'El Salvador' },
+            { code: 'uy', name: 'Uruguay' }, { code: 'jm', name: 'Jamaica' },
+            { code: 'ht', name: 'Haiti' }, { code: 'tt', name: 'Trinidad y Tobago' },
+            { code: 'bb', name: 'Barbados' }, { code: 'bs', name: 'Bahamas' },
+            { code: 'de', name: 'Alemania' }, { code: 'it', name: 'Italia' },
+            { code: 'pt', name: 'Portugal' }, { code: 'ru', name: 'Rusia' },
+            { code: 'nl', name: 'Paises Bajos' }, { code: 'be', name: 'Belgica' },
+            { code: 'ch', name: 'Suiza' }, { code: 'se', name: 'Suecia' },
+            { code: 'no', name: 'Noruega' }, { code: 'dk', name: 'Dinamarca' },
+            { code: 'fi', name: 'Finlandia' }, { code: 'pl', name: 'Polonia' },
+            { code: 'at', name: 'Austria' }, { code: 'gr', name: 'Grecia' },
+            { code: 'ie', name: 'Irlanda' }, { code: 'cz', name: 'Rep Checa' },
+            { code: 'ua', name: 'Ucrania' }, { code: 'gb-eng', name: 'Inglaterra' },
+            { code: 'gb-sct', name: 'Escocia' }, { code: 'gb-wls', name: 'Gales' },
+            { code: 'au', name: 'Australia' }, { code: 'nz', name: 'Nueva Zelanda' },
+            { code: 'in', name: 'India' }, { code: 'id', name: 'Indonesia' },
+            { code: 'ph', name: 'Filipinas' }, { code: 'th', name: 'Tailandia' },
+            { code: 'vn', name: 'Vietnam' }, { code: 'my', name: 'Malasia' },
+            { code: 'sg', name: 'Singapur' }, { code: 'pk', name: 'Pakistan' },
+            { code: 'tw', name: 'Taiwan' }, { code: 'hk', name: 'Hong Kong' },
+            { code: 'sa', name: 'Arabia Saudita' }, { code: 'ae', name: 'Emiratos Arabes' },
+            { code: 'tr', name: 'Turquia' }, { code: 'il', name: 'Israel' },
+            { code: 'za', name: 'Sudafrica' }, { code: 'eg', name: 'Egipto' },
+            { code: 'ma', name: 'Marruecos' }, { code: 'ng', name: 'Nigeria' },
+            { code: 'gh', name: 'Ghana' }, { code: 'cm', name: 'Camerun' },
+            { code: 'sn', name: 'Senegal' }, { code: 'ci', name: 'Costa de Marfil' }
+        ],
+        shields: [],  // Cargado automáticamente desde /api/recursos
+        socials: []   // Cargado automáticamente desde /api/recursos
+    };
+
+    // =====================================================
+    //  CARGAR PARTIDA DESDE EL PANEL
+    // =====================================================
+    function loadMatch(payload) {
+        state.activeMatchId    = payload.match_id;
+        state.swapped          = false;
+
+        // Round base — guardar limpio, applyFormat agrega el formato
+        state.activeRound   = payload.round || '';
+        state.requiredScore = payload.required_score || null;
+
+        // Nombres + tag W/L automático según origen del jugador
+        const p1Tag = payload.p1Side === 'W' ? ' [W]' : payload.p1Side === 'L' ? ' [L]' : '';
+        const p2Tag = payload.p2Side === 'W' ? ' [W]' : payload.p2Side === 'L' ? ' [L]' : '';
+        document.getElementById('dock-p1-name').value = (payload.p1?.name || 'TBD') + p1Tag;
+        document.getElementById('dock-p2-name').value = (payload.p2?.name || 'TBD') + p2Tag;
+
+        // Aplicar formato al round input según estado actual
+        applyFormat();
+
+        // Banderas
+        state.p1.flag = payload.p1?.flag || 'do';
+        state.p2.flag = payload.p2?.flag || 'do';
+        updateResUI('flag', 'p1', state.p1.flag);
+        updateResUI('flag', 'p2', state.p2.flag);
+
+        // Escudos
+        state.p1.shield = payload.p1?.shield || '';
+        state.p2.shield = payload.p2?.shield || '';
+        updateResUI('shield', 'p1', state.p1.shield);
+        updateResUI('shield', 'p2', state.p2.shield);
+
+        // Redes
+        state.p1.social = payload.p1?.socialType || '';
+        state.p2.social = payload.p2?.socialType || '';
+        state.p1.socialHandle = payload.p1?.socialHandle || '';
+        state.p2.socialHandle = payload.p2?.socialHandle || '';
+        updateResUI('social', 'p1', state.p1.social);
+        updateResUI('social', 'p2', state.p2.social);
+
+        // NO resetear scores aquí — el usuario debe presionar INICIAR PARTIDA para eso
+        // Guardar payload pendiente y mostrar botón INICIAR PARTIDA
+        pendingMatchPayload = payload;
+        showStartMatchButton();
+
+        document.getElementById('status-bar').innerText = `Partida lista: #${payload.match_id} · ${payload.round}${state.requiredScore ? ' · FT'+state.requiredScore : ''} — Presiona INICIAR PARTIDA`;
+    }
+
+    // Chequea si algún jugador alcanzó el FT y activa/desactiva REPORTAR
+    function checkReportReady() {
+        const btn        = document.getElementById('btn-report');
+        const btnUpdate  = document.getElementById('btn-update-stream');
+        const btnStart   = document.getElementById('btn-start-match');
+        const hasMatch   = !!state.activeMatchId;
+        const ftReached  = state.requiredScore &&
+                           (state.p1Score >= state.requiredScore || state.p2Score >= state.requiredScore);
+
+        // Si hay una partida pendiente de iniciar, INICIAR PARTIDA tiene prioridad
+        if (pendingMatchPayload) {
+            btn.classList.remove('ready');
+            btn.style.display = 'none';
+            btnUpdate.style.display = 'none';
+            btnStart.classList.add('ready');
+            btnStart.style.display = 'block';
+        } else if (hasMatch && ftReached) {
+            // Mostrar REPORTAR, ocultar los demás
+            btn.classList.add('ready');
+            btn.style.display = 'block';
+            btnUpdate.style.display = 'none';
+            btnStart.classList.remove('ready');
+            btnStart.style.display = 'none';
+        } else {
+            // Mostrar ACTUALIZAR, ocultar los demás
+            btn.classList.remove('ready');
+            btn.style.display = 'none';
+            btnUpdate.style.display = 'block';
+            btnStart.classList.remove('ready');
+            btnStart.style.display = 'none';
+        }
+    }
+
+    function showStartMatchButton() {
+        checkReportReady();
+    }
+
+    // =====================================================
+    //  INICIAR PARTIDA (nueva partida desde el panel)
+    // =====================================================
+    async function startMatch() {
+        if (!pendingMatchPayload) return;
+
+        const btn = document.getElementById('btn-start-match');
+        btn.classList.remove('ready');
+        btn.style.display = 'none';
+
+        // Ahora sí: resetear marcador a 0-0
+        state.p1Score = 0;
+        state.p2Score = 0;
+        document.getElementById('dock-p1-score').innerText = 0;
+        document.getElementById('dock-p2-score').innerText = 0;
+
+        pendingMatchPayload = null;
+
+        // Enviar al overlay con animación si está activa
+        if (state.updateAnimEnabled) {
+            const btnUpdate = document.getElementById('btn-update-stream');
+            btnUpdate.disabled = true;
+            btnUpdate.innerText = 'ANIMANDO...';
+            btnUpdate.style.display = 'block';
+
+            await hideOverlaysTemp(async () => {
+                sendUpdate(true);
+            });
+
+            btnUpdate.disabled = false;
+        } else {
+            sendUpdate(true);
+        }
+
+        document.getElementById('status-bar').innerText = `Match #${state.activeMatchId} · ${state.activeRound}${state.requiredScore ? ' · FT'+state.requiredScore : ''}`;
+        checkReportReady();
+    }
+
+    // =====================================================
+    //  REPORTAR RESULTADO A ROUND.ONE (VÍA PANEL)
+    // =====================================================
+    function reportMatch() {
+        if (!state.activeMatchId) return;
+
+        let p1Score = state.p1Score;
+        let p2Score = state.p2Score;
+
+        // Si los jugadores están intercambiados en la UI visual, revertir los puntajes para la API
+        if (state.swapped) {
+            p1Score = state.p2Score;
+            p2Score = state.p1Score;
+        }
+
+        if (p1Score === 0 && p2Score === 0) {
+            if (!confirm('Los scores están en 0-0. ¿Estás seguro de reportar?')) return;
+        }
+
+        const winner = p1Score > p2Score ? 1 : p2Score > p1Score ? 2 : null;
+        if (!winner) {
+            alert('No se puede reportar: los scores están empatados. Define un ganador.');
+            return;
+        }
+
+        channel.postMessage({
+            type: 'REPORT_MATCH',
+            payload: {
+                match_id:      state.activeMatchId,
+                player1_score: p1Score,
+                player2_score: p2Score,
+                winner:        winner
+            }
+        });
+
+        document.getElementById('status-bar').innerText = `Reportado #${state.activeMatchId} → ${p1Score}-${p2Score} · W:P${winner}`;
+
+        // Limpiar partida activa tras reportar
+        state.activeMatchId  = null;
+        state.activeRound    = '';
+        state.requiredScore  = null;
+        checkReportReady(); // Vuelve a mostrar ACTUALIZAR
+    }
+
+    // =====================================================
+    //  SISTEMA DE RECURSOS (Banderas, Escudos, Redes)
+    // =====================================================
+
+    // Actualizar UI del botón de recurso
+    function updateResUI(type, player, value) {
+        const img = document.getElementById(`img-${type}-${player}`);
+        const ph  = document.getElementById(`ph-${type}-${player}`);
+
+        if (!value) {
+            if (img) { img.src = ''; img.style.display = 'none'; }
+            if (ph)  ph.style.display = 'block';
+            return;
+        }
+
+        let src = '';
+        if (type === 'flag')   src = `./banderas/${value}.png`;
+        if (type === 'shield') src = `./escudos/${value}`;
+        if (type === 'social') src = `./redes/${value}`;
+
+        if (img) {
+            img.src = src;
+            img.style.display = 'block';
+            img.onerror = () => { img.style.display = 'none'; if (ph) ph.style.display = 'block'; };
+        }
+        if (ph) ph.style.display = 'none';
+    }
+
+    // Abrir/cerrar menú de recurso
+    function toggleMenu(type, player) {
+        const menuId = `menu-${type}-${player}`;
+        const menu   = document.getElementById(menuId);
+        const isOpen = menu.style.display === 'flex';
+
+        // Cerrar todos
+        document.querySelectorAll('.res-menu').forEach(m => m.style.display = 'none');
+
+        if (!isOpen) {
+            menu.style.display = 'flex';
+            buildMenu(type, player, '');
+            const search = menu.querySelector('.res-search');
+            if (search) { search.value = ''; search.focus(); }
+        }
+    }
+
+    // Construir contenido del menú
+    function buildMenu(type, player, filter) {
+        const grid = document.getElementById(`grid-${type}-${player}`);
+        grid.innerHTML = '';
+        const term = filter.toLowerCase();
+
+        // Opción "Quitar" para escudos y redes
+        if (type !== 'flag') {
+            const none = document.createElement('div');
+            none.className = 'res-option none-opt';
+            none.style.gridColumn = '1 / -1';
+            none.innerText = '✕ Quitar';
+            none.onclick = () => selectResource(type, player, '');
+            grid.appendChild(none);
+        }
+
+        let items = [];
+        if (type === 'flag') {
+            items = RESOURCES.flags
+                .filter(f => !term || f.name.toLowerCase().includes(term) || f.code.includes(term))
+                .map(f => ({ value: f.code, label: f.name, src: `./banderas/${f.code}.png`, isImg: true }));
+        } else if (type === 'shield') {
+            items = RESOURCES.shields
+                .filter(s => !term || s.toLowerCase().includes(term))
+                .map(s => ({ value: s, label: s.replace(/\.[^/.]+$/, ''), src: `./escudos/${s}`, isImg: true }));
+        } else {
+            items = RESOURCES.socials
+                .filter(s => !term || s.toLowerCase().includes(term))
+                .map(s => ({ value: s, label: s.replace(/\.[^/.]+$/, ''), src: `./redes/${s}`, isImg: true }));
+        }
+
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'res-option';
+            div.title = item.label;
+            if (item.isImg) {
+                div.innerHTML = `<img src="${item.src}" onerror="this.style.display='none'">`;
+            } else {
+                div.innerText = item.label;
+            }
+            div.onclick = () => selectResource(type, player, item.value);
+            grid.appendChild(div);
+        });
+    }
+
+    function filterMenu(type, player, term) {
+        buildMenu(type, player, term);
+    }
+
+    function selectResource(type, player, value) {
+        state[player][type === 'flag' ? 'flag' : type === 'shield' ? 'shield' : 'social'] = value;
+        updateResUI(type, player, value);
+        document.getElementById(`menu-${type}-${player}`).style.display = 'none';
+        markDirty();
+    }
+
+    // =====================================================
+    //  ENVIAR DATOS AL OVERLAY
+    // =====================================================
+    function sendUpdate(markClean = true) {
+        const payload = {
+            tournamentName: document.getElementById('dock-tournament-name').value,
+            p1Name:  document.getElementById('dock-p1-name').value,
+            p2Name:  document.getElementById('dock-p2-name').value,
+            round:   document.getElementById('dock-round').value,
+            p1Score: state.p1Score,
+            p2Score: state.p2Score,
+            p1Flag: state.p1.flag, p2Flag: state.p2.flag,
+            p1Shield: state.p1.shield, p2Shield: state.p2.shield,
+            p1Social: state.p1.social, p2Social: state.p2.social,
+            p1SocialHandle: state.p1.socialHandle, p2SocialHandle: state.p2.socialHandle,
+            ft: (!formatState.linked && getFormatText()) ? getFormatText() : '',
+            format: formatState.type,
+            linked: formatState.linked
+        };
+        channel.postMessage({ type: 'UPDATE_DATA', payload });
+
+        if (markClean) {
+            state.dirty = false;
+            const btn = document.getElementById('btn-update-stream');
+            btn.classList.remove('active');
+            btn.innerText = 'ACTUALIZADO';
+            setTimeout(() => { if (!state.dirty) btn.innerText = 'ACTUALIZAR'; }, 1500);
+            document.querySelectorAll('.dock-input.pending, .res-btn.pending').forEach(el => el.classList.remove('pending'));
+        }
+    }
+
+    // =====================================================
+    //  SCORES
+    // =====================================================
+    function adjustScore(player, delta) {
+        if (player === 'p1') {
+            state.p1Score = Math.max(0, state.p1Score + delta);
+            document.getElementById('dock-p1-score').innerText = state.p1Score;
+        } else {
+            state.p2Score = Math.max(0, state.p2Score + delta);
+            document.getElementById('dock-p2-score').innerText = state.p2Score;
+        }
+        // Solo enviar al overlay si no hay cambios pendientes de confirmar
+        if (!state.dirty) sendUpdate(false);
+        checkReportReady(); // Verificar si se llegó al FT
+    }
+
+    function resetScores() {
+        state.p1Score = 0;
+        state.p2Score = 0;
+        document.getElementById('dock-p1-score').innerText = 0;
+        document.getElementById('dock-p2-score').innerText = 0;
+        // Solo enviar al overlay si no hay cambios pendientes de confirmar
+        if (!state.dirty) sendUpdate(false);
+        checkReportReady();
+    }
+
+    // =====================================================
+    //  STAGING / PENDING
+    // =====================================================
+    function markDirty() {
+        state.dirty = true;
+        const btn = document.getElementById('btn-update-stream');
+        btn.classList.add('active');
+        btn.innerText = 'ACTUALIZAR *';
+        document.getElementById('dock-p1-name').classList.add('pending');
+        document.getElementById('dock-p2-name').classList.add('pending');
+        document.getElementById('dock-round').classList.add('pending');
+    }
+
+    // Retorna una promesa que se resuelve en ms
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Oculta temporalmente, espera, ejecuta callback, y muestra de nuevo
+    async function hideOverlaysTemp(callback) {
+        // Solo animar si están visibles actualmente
+        const wasVisible = state.overlaysVisible;
+        
+        if (wasVisible) {
+            channel.postMessage({ type: 'TOGGLE_VISIBILITY', payload: { isVisible: false } });
+            await sleep(550); // 500ms animacion + 50ms margen
+        }
+
+        if (callback) await callback();
+
+        if (wasVisible) {
+            // Esperar un frame extra para que arquitecto.html termine de re-renderizar
+            // los elementos en estado oculto antes de disparar la transicion de aparicion
+            await sleep(150);
+            channel.postMessage({ type: 'TOGGLE_VISIBILITY', payload: { isVisible: true } });
+        }
+    }
+
+    async function commitChanges() {
+        if (!state.dirty) return;
+        
+        const btn = document.getElementById('btn-update-stream');
+        btn.disabled = true;
+        btn.innerText = 'ACTUALIZANDO...';
+
+        sendUpdate(true);
+
+        btn.disabled = false;
+        checkReportReady();
+    }
+
+    // =====================================================
+    //  UTILIDADES
+    // =====================================================
+    async function swapPlayers() {
+        const inp1 = document.getElementById('dock-p1-name');
+        const inp2 = document.getElementById('dock-p2-name');
+
+        const doSwap = () => {
+            state.swapped = !state.swapped;
+
+            [inp1.value, inp2.value] = [inp2.value, inp1.value];
+            [state.p1Score, state.p2Score] = [state.p2Score, state.p1Score];
+            document.getElementById('dock-p1-score').innerText = state.p1Score;
+            document.getElementById('dock-p2-score').innerText = state.p2Score;
+
+            // Swap recursos
+            const tmpFlag   = state.p1.flag;   state.p1.flag   = state.p2.flag;   state.p2.flag   = tmpFlag;
+            const tmpShield = state.p1.shield; state.p1.shield = state.p2.shield; state.p2.shield = tmpShield;
+            const tmpSocial = state.p1.social; state.p1.social = state.p2.social; state.p2.social = tmpSocial;
+            const tmpHandle = state.p1.socialHandle; state.p1.socialHandle = state.p2.socialHandle; state.p2.socialHandle = tmpHandle;
+
+            updateResUI('flag',   'p1', state.p1.flag);
+            updateResUI('flag',   'p2', state.p2.flag);
+            updateResUI('shield', 'p1', state.p1.shield);
+            updateResUI('shield', 'p2', state.p2.shield);
+            updateResUI('social', 'p1', state.p1.social);
+            updateResUI('social', 'p2', state.p2.social);
+        };
+
+        if (state.swapAnimEnabled) {
+            await hideOverlaysTemp(async () => {
+                if (state.dirty) sendUpdate(true); // confirmar cambios pendientes primero
+                doSwap();
+                sendUpdate(false);
+            });
+        } else {
+            if (state.dirty) sendUpdate(true); // confirmar cambios pendientes primero
+            doSwap();
+            sendUpdate(false);
+        }
+    }
+
+    function addTag(player, tag) {
+        const inp = document.getElementById(`dock-${player}-name`);
+        const tagStr      = `[${tag}]`;
+        const otherTagStr = tag === 'W' ? '[L]' : '[W]';
+        let current = inp.value.trim();
+
+        if (current.includes(tagStr)) {
+            inp.value = current.replace(` ${tagStr}`, '').replace(tagStr, '');
+        } else {
+            if (current.includes(otherTagStr)) {
+                current = current.replace(` ${otherTagStr}`, '').replace(otherTagStr, '').trim();
+            }
+            inp.value = `${current} ${tagStr}`;
+        }
+        markDirty();
+    }
+
+    function setPresetRound(text) {
+        state.activeRound = text;
+        applyFormat();
+    }
+
+    // =====================================================
+    //  ESTADO DEL FORMATO (FT / BO)
+    // =====================================================
+    const formatState = {
+        type:   null,  // 'FT' | 'BO' | null
+        linked: true   // true = pegado al round, false = capa separada
+    };
+
+    function getFormatText() {
+        if (!formatState.type || !state.requiredScore) return '';
+        if (formatState.type === 'FT') return `FT${state.requiredScore}`;
+        return `Best of ${state.requiredScore}`;
+    }
+
+    function updateFormatUI() {
+        document.getElementById('btn-fmt-ft').classList.toggle('fmt-active', formatState.type === 'FT');
+        document.getElementById('btn-fmt-bo').classList.toggle('fmt-active', formatState.type === 'BO');
+    }
+
+    function syncFormatToArchitect() {
+        channel.postMessage({
+            type: 'UPDATE_DATA',
+            payload: {
+                format: formatState.type,
+                linked: formatState.linked
+            }
+        });
+    }
+
+    function setFormat(type) {
+        // Presionar el activo → desactivar
+        formatState.type = (formatState.type === type) ? null : type;
+        updateFormatUI();
+        applyFormat();
+        syncFormatToArchitect();
+    }
+
+    function toggleFormatLink() {
+        formatState.linked = !formatState.linked;
+        const btn = document.getElementById('btn-fmt-link');
+        btn.classList.toggle('link-active', formatState.linked);
+        btn.innerText = formatState.linked ? '⛓ Pegado' : '⛓ Separado';
+        applyFormat();
+        syncFormatToArchitect();
+    }
+
+    function applyFormat() {
+        // Tomar el round base limpio (sin formato previo)
+        const roundBase = state.activeRound || document.getElementById('dock-round').value
+            .replace(/\s*·\s*(FT\d+|Best of \d+)$/i, '').trim();
+        const fmt = getFormatText();
+
+        if (formatState.linked) {
+            document.getElementById('dock-round').value = fmt
+                ? `${roundBase} · ${fmt}`
+                : roundBase;
+        } else {
+            document.getElementById('dock-round').value = roundBase;
+        }
+        markDirty();
+    }
+
+    // =====================================================
+    //  OVERLAYS
+    // =====================================================
+    function toggleOverlayPanel() {
+        document.getElementById('overlay-panel').classList.toggle('open');
+    }
+
+    // Cerrar el panel al hacer clic fuera del mismo
+    document.addEventListener('click', (e) => {
+        const panel = document.getElementById('overlay-panel');
+        const btnSettings = document.getElementById('btn-overlay-settings');
+        // Si el panel existe, está abierto y el click no es dentro del panel ni en su botón
+        if (panel && btnSettings && panel.classList.contains('open')) {
+            if (!panel.contains(e.target) && !btnSettings.contains(e.target)) {
+                panel.classList.remove('open');
+            }
+        }
+    });
+
+    async function fetchOverlays() {
+        try {
+            const res = await fetch('/api/lista_overlays');
+            if (res.ok) {
+                const overlays = await res.json();
+                const select = document.getElementById('overlay-select');
+                select.innerHTML = '<option value="">-- Seleccionar Overlay --</option>';
+                overlays.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.innerText = name.replace('.json', '');
+                    select.appendChild(opt);
+                });
+                
+                if (currentOverlayFile) {
+                    select.value = currentOverlayFile;
+                }
+            }
+        } catch (e) {
+            console.warn('Error cargando lista de overlays', e);
+        }
+    }
+
+    async function loadOverlayConfig() {
+        const select = document.getElementById('overlay-select');
+        const filename = select.value;
+        if (!filename) return;
+
+        currentOverlayFile = filename;
+        select.disabled = true; // Bloquear dropdown durante la animacion
+
+        try {
+            await hideOverlaysTemp(async () => {
+                // Se anade un timestamp para evitar que el navegador use la cache
+                const cacheBuster = '?t=' + Date.now();
+                let res = await fetch('/Overlays/' + filename + cacheBuster);
+                if (!res.ok) {
+                    res = await fetch('/overlays/' + filename + cacheBuster);
+                }
+                if (res.ok) {
+                    const config = await res.text();
+                    
+                    try {
+                        const parsedData = JSON.parse(config);
+                        let actualLayers = parsedData;
+
+                        if (!Array.isArray(parsedData) && parsedData.layers) {
+                            actualLayers = parsedData.layers;
+                            if (parsedData.settings) {
+                                if (parsedData.settings.format !== undefined) {
+                                    formatState.type = parsedData.settings.format;
+                                }
+                                if (parsedData.settings.linked !== undefined) {
+                                    formatState.linked = parsedData.settings.linked;
+                                }
+                                
+                                updateFormatUI();
+                                const btn = document.getElementById('btn-fmt-link');
+                                btn.classList.toggle('link-active', formatState.linked);
+                                btn.innerText = formatState.linked ? '⛓ Pegado' : '⛓ Separado';
+                                applyFormat();
+                            }
+                        }
+
+                        const tourneyLayer = actualLayers.find(l => l.id === 'master_tournament_name');
+                        const inputTourney = document.getElementById('dock-tournament-name');
+                        if (inputTourney) {
+                            inputTourney.value = (tourneyLayer && tourneyLayer.text) ? tourneyLayer.text : '';
+                        }
+
+                        // (no se activa el botón ACTUALIZAR al cambiar overlay)
+                    } catch(e) { 
+                        console.warn("Error leyendo preferencias o nombre del torneo", e); 
+                    }
+
+                    channel.postMessage({
+                        type: 'CHANGE_OVERLAY',
+                        payload: { config: config }
+                    });
+                    
+                    // Inmediatamente despues de inyectar el config, mandar el estado visual y dirty values
+                    sendUpdate(false);
+                    
+                } else {
+                    console.error('No se pudo cargar el archivo json del overlay');
+                }
+            });
+            toggleOverlayPanel(); // Cerrar el panel tras seleccionar
+            
+        } catch (e) {
+            console.error('Error cargando la configuración del overlay', e);
+        } finally {
+            select.disabled = false;
+        }
+    }
+
+    // =====================================================
+    //  INICIALIZACIÓN
+    // =====================================================
+    async function fetchResources() {
+        try {
+            const res = await fetch('/api/recursos');
+            if (!res.ok) throw new Error('Sin servidor');
+            const data = await res.json();
+            RESOURCES.shields = data.shields || [];
+            RESOURCES.socials = data.socials || [];
+        } catch (e) {
+            console.warn('No se pudo conectar a /api/recursos — usando recursos vacíos.');
+        }
+    }
+
+    function toggleGlobalVisibility() {
+        state.overlaysVisible = !state.overlaysVisible;
+        const btn = document.getElementById('btn-toggle-eye');
+        const eyeOpen = document.getElementById('icon-eye-open');
+        const eyeClosed = document.getElementById('icon-eye-closed');
+        
+        if (state.overlaysVisible) {
+            eyeOpen.style.display = 'block';
+            eyeClosed.style.display = 'none';
+            btn.style.color = 'var(--accent)';
+            btn.style.borderColor = 'rgba(0,188,212,0.4)';
+        } else {
+            eyeOpen.style.display = 'none';
+            eyeClosed.style.display = 'block';
+            btn.style.color = '#888';
+            btn.style.borderColor = '#444';
+        }
+
+        channel.postMessage({ type: 'TOGGLE_VISIBILITY', payload: { isVisible: state.overlaysVisible } });
+    }
+
+    window.onload = async () => {
+        await fetchResources();
+        await fetchOverlays();
+        updateResUI('flag', 'p1', state.p1.flag);
+        updateResUI('flag', 'p2', state.p2.flag);
+        checkReportReady();
+        // Inicializar UI de formato
+        updateFormatUI();
+        const linkBtn = document.getElementById('btn-fmt-link');
+        linkBtn.classList.add('link-active');
+        linkBtn.innerText = '⛓ Pegado';
+
+        setTimeout(() => {
+            sendUpdate(true);
+        }, 800);
+    };
+</script>
+</body>
+</html>

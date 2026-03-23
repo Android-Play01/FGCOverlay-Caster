@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" name="viewport"/>
+    <title>FGC Overlay Server</title>
+    <script src="tailwind.js"></script>
+    <style>
+        /* ============================================================
+           PROTECCIÓN: Deshabilita selección de texto y arrastre global
+        ============================================================ */
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            touch-action: none;
+            -ms-content-zooming: none;
+            cursor: default;
+        }
+
+        /* Cambio 2: Toda tarjeta clickeable muestra mano */
+        .cursor-pointer,
+        .cursor-pointer * {
+            cursor: pointer !important;
+        }
+
+        img {
+            -webkit-user-drag: none;
+            user-drag: none;
+            pointer-events: none;
+        }
+        /* ============================================================ */
+
+        body {
+            background-color: #050508;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* FONDO ARCADE: Rejilla + Scanlines */
+        .arcade-bg {
+            background-image:
+                linear-gradient(rgba(18, 16, 33, 0.95), rgba(18, 16, 33, 0.95)),
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+        }
+
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(rgba(18, 16, 33, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* PANELES "HARD-TECH" */
+        .tech-panel {
+            background: rgba(15, 17, 26, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tech-panel::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: currentColor;
+            opacity: 0.5;
+        }
+
+        .tech-panel:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(25, 28, 41, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        /* BOTONES DE ACCIÓN */
+        .arcade-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 800;
+        }
+
+        .arcade-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #fff;
+            transform: scale(1.02);
+        }
+
+        /* COLORES FGC */
+        .text-neon-cyan   { color: #00f2ff; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+        .text-neon-purple { color: #bc13fe; text-shadow: 0 0 10px rgba(188, 19, 254, 0.5); }
+        .text-neon-amber  { color: #ffb000; text-shadow: 0 0 10px rgba(255, 176, 0, 0.5); }
+        .text-neon-green  { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
+        .border-neon-cyan { border-color: #00f2ff; }
+
+        /* SCROLLBAR CUSTOM */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+
+        .glitch-text:hover {
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0%   { transform: translate(0); }
+            20%  { transform: translate(-2px, 2px); }
+            40%  { transform: translate(-2px, -2px); }
+            60%  { transform: translate(2px, 2px); }
+            80%  { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* TAB SECTIONS */
+        .tab-section { display: none; }
+        .tab-section.active { display: block; }
+
+        /* Cambio 3: Animación pulsante para la carpeta de overlays */
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(0, 242, 255, 0.15); box-shadow: 0 0 0 rgba(0, 242, 255, 0); }
+            50%       { border-color: rgba(0, 242, 255, 0.6);  box-shadow: 0 0 15px rgba(0, 242, 255, 0.15); }
+        }
+        .pulse-overlay-btn {
+            animation: pulse-border 2.5s ease-in-out infinite;
+        }
+        .pulse-overlay-btn:hover {
+            animation: none;
+            border-color: #00f2ff !important;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        }
+
+        /* Cambio 9: Arquitecto sidebar card estilo nuevo */
+        .arch-sidebar-card {
+            background: rgba(15, 17, 26, 0.8);
+            border: 1px solid rgba(0, 242, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .arch-sidebar-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 3px; height: 100%;
+            background: #00f2ff;
+            opacity: 0.5;
+        }
+        .arch-sidebar-card:hover {
+            border-color: rgba(0, 242, 255, 0.4);
+            background: rgba(25, 28, 41, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(0, 242, 255, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="arcade-bg"></div>
+    <div class="scanlines"></div>
+
+    <!-- ============================================================
+         HEADER
+    ============================================================ -->
+    <header class="h-20 flex items-center justify-between px-8 border-b border-white/10 bg-black/40 backdrop-blur-md z-20 shrink-0">
+        <div class="flex items-center gap-6">
+            <!-- Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 border-2 border-neon-cyan rotate-45 flex items-center justify-center bg-black overflow-hidden">
+                    <img src="logo2.png" alt="Logo" class="w-6 h-6 object-contain" style="transform: rotate(-45deg) scale(1.375);">
+                </div>
+                <div>
+                    <h1 class="text-xl font-black italic tracking-tighter leading-none">FGC <span class="text-neon-cyan">OVERLAY</span></h1>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Caster Server v2.5</p>
+                </div>
+            </div>
+
+            <!-- Navegación Tabular -->
+            <nav class="flex gap-1 ml-10">
+                <button onclick="switchTab('dashboard', this)" id="nav-dashboard"
+                    class="px-6 py-2 text-xs font-black uppercase tracking-widest border-b-2 border-neon-cyan text-white transition-all">
+                    Consola
+                </button>
+                <button onclick="switchTab('stats', this)" id="nav-stats"
+                    class="px-6 py-2 text-xs font-black uppercase tracking-widest border-b-2 border-transparent text-slate-500 hover:text-white transition-all">
+                    Métricas
+                </button>
+                <button onclick="switchTab('widgets', this)" id="nav-widgets"
+                    class="px-6 py-2 text-xs font-black uppercase tracking-widest border-b-2 border-transparent text-slate-500 hover:text-white transition-all">
+                    Como usar
+                </button>
+            </nav>
+        </div>
+
+        <!-- Estado + Modo Lite -->
+        <div class="flex items-center gap-6">
+            <div class="flex flex-col items-end">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e] animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-green-400 tracking-widest uppercase">Live Local Server</span>
+                </div>
+                <span class="text-[11px] font-mono text-slate-400">PORT: 8000</span>
+            </div>
+
+            <button onclick="saveRam()" class="arcade-btn px-6 py-3 rounded-none skew-x-[-15deg] border-green-500/50 text-green-400 hover:bg-green-500 hover:text-black cursor-pointer">
+                <div class="skew-x-[15deg] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/>
+                    </svg>
+                    <span class="text-xs">Modo Lite</span>
+                </div>
+            </button>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         MAIN CONTENT
+    ============================================================ -->
+    <main class="flex-1 p-8 overflow-y-auto z-10">
+
+        <!-- =====================================================
+             SECCIÓN: CONSOLA (Dashboard)
+        ===================================================== -->
+        <div id="tab-dashboard" class="tab-section active">
+            <div class="grid grid-cols-12 gap-6">
+
+                <!-- Módulos Principales -->
+                <div class="col-span-12 lg:col-span-8 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-black uppercase tracking-[0.3em] text-slate-500">Módulos Disponibles</h2>
+                        <div class="h-px bg-white/5 flex-1 mx-4"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Arquitecto -->
+                        <div onclick="openInBrowser('http://localhost:8000/arquitecto.html?obs=1')"
+                             class="tech-panel p-6 text-neon-cyan cursor-pointer group">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-3 bg-cyan-500/10 border border-cyan-500/20 group-hover:border-cyan-500/50 transition-all">
+                                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                    </svg>
+                                </div>
+                                <span class="text-[10px] font-bold opacity-50 tracking-widest">ID: ARCH_01</span>
+                            </div>
+                            <h3 class="text-xl font-black italic mb-1 uppercase text-white group-hover:text-neon-cyan">Arquitecto</h3>
+                            <p class="text-[10px] font-mono text-slate-600 mb-4">http://localhost:8000/arquitecto.html?obs=1</p>
+                            <button onclick="event.stopPropagation(); copyToClipboard('http://localhost:8000/arquitecto.html?obs=1')"
+                                class="w-full arcade-btn py-2 text-[10px] text-white">
+                                Copiar URL
+                            </button>
+                        </div>
+
+                        <!-- Controlador -->
+                        <div onclick="openInBrowser('http://localhost:8000/controlador.html')"
+                             class="tech-panel p-6 text-neon-purple cursor-pointer group">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-3 bg-purple-500/10 border border-purple-500/20 group-hover:border-purple-500/50 transition-all">
+                                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <span class="text-[10px] font-bold opacity-50 tracking-widest">ID: CTRL_02</span>
+                            </div>
+                            <h3 class="text-xl font-black italic mb-1 uppercase text-white group-hover:text-neon-purple">Controlador</h3>
+                            <p class="text-[10px] font-mono text-slate-600 mb-4">http://localhost:8000/controlador.html</p>
+                            <button onclick="event.stopPropagation(); copyToClipboard('http://localhost:8000/controlador.html')"
+                                class="w-full arcade-btn py-2 text-[10px] text-white">
+                                Copiar URL
+                            </button>
+                        </div>
+
+                        <!-- Panel de Datos (full width) -->
+                        <div onclick="openInBrowser('http://localhost:8000/Panel.html')"
+                             class="tech-panel p-6 text-neon-amber cursor-pointer group md:col-span-2">
+                            <div class="flex items-center gap-6">
+                                <div class="p-4 bg-amber-500/10 border border-amber-500/20 group-hover:border-amber-500/50 transition-all shrink-0">
+                                    <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-black italic mb-1 uppercase text-white group-hover:text-neon-amber">Panel de Datos (API)</h3>
+                                    <p class="text-[10px] font-mono text-slate-600">http://localhost:8000/Panel.html</p>
+                                </div>
+                                <button onclick="event.stopPropagation(); copyToClipboard('http://localhost:8000/Panel.html')"
+                                    class="arcade-btn px-8 py-3 text-[10px] text-white shrink-0">
+                                    Copiar URL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Derecha: Estado Local -->
+                <div class="col-span-12 lg:col-span-4 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-black uppercase tracking-[0.3em] text-slate-500">Estado Local</h2>
+                        <div class="h-px bg-white/5 flex-1 mx-4"></div>
+                    </div>
+
+                    <div class="tech-panel p-6 border-white/5 space-y-6">
+                        <!-- RAM grande -->
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Uso de Memoria</span>
+                            <div class="flex items-baseline gap-1 mb-3">
+                                <span id="ram-val-sidebar" class="text-3xl font-black italic text-white">0</span>
+                                <span class="text-base font-bold text-neon-amber opacity-70">%</span>
+                            </div>
+                            <div class="h-2 bg-white/10 overflow-hidden rounded-sm">
+                                <div id="ram-bar-sidebar" class="h-full transition-all duration-1000 rounded-sm" style="width: 0%; background: #ffb000; box-shadow: 0 0 8px #ffb000;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Uptime -->
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold uppercase mb-2">
+                                <span class="text-slate-500">Tiempo de Actividad</span>
+                                <span id="uptime-val" class="text-neon-cyan">00:00:00</span>
+                            </div>
+                        </div>
+
+                        <!-- Terminal mini -->
+                        <div class="pt-4 border-t border-white/5">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-4">Registro del Servidor</span>
+                            <div id="terminal-logs" class="bg-black/60 p-4 font-mono text-[9px] h-40 overflow-y-auto space-y-1 text-slate-400 rounded">
+                                <div class="text-slate-500 italic">Esperando actividad...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shortcut Overlays (con animación) -->
+                    <div onclick="document.title='PYEvent:folder|overlays'"
+                         class="group p-4 bg-white/5 border border-dashed border-white/10 cursor-pointer transition-all flex items-center justify-between pulse-overlay-btn">
+                        <span class="text-[10px] font-black uppercase tracking-widest group-hover:text-neon-cyan">Abrir Carpeta de Overlays</span>
+                        <svg class="w-4 h-4 text-slate-500 group-hover:text-neon-cyan transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" stroke-width="2"/>
+                        </svg>
+                    </div>
+
+                    <!-- Arquitecto shortcut (rediseñado con estilo tech-panel) -->
+                    <div onclick="openInBrowser('http://localhost:8000/arquitecto.html')"
+                         class="group arch-sidebar-card p-5 cursor-pointer">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="p-2 bg-cyan-500/10 border border-cyan-500/20 group-hover:border-cyan-500/50 transition-all">
+                                <svg class="w-5 h-5 text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-black uppercase tracking-widest text-white group-hover:text-neon-cyan transition-colors">Arquitecto</h4>
+                                <p class="text-[10px] text-slate-500 leading-tight">Crea tus propios overlays</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1 text-[10px] font-bold text-slate-400 group-hover:text-neon-cyan transition-all">
+                            Abrir
+                            <svg class="w-3 h-3 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================================
+             SECCIÓN: MÉTRICAS
+        ===================================================== -->
+        <div id="tab-stats" class="tab-section">
+            <div class="grid grid-cols-12 gap-6">
+
+                <!-- CPU Monitor -->
+                <div class="col-span-12 md:col-span-4 tech-panel p-6 text-neon-cyan">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest">Processor Unit (CPU)</span>
+                        <svg class="w-4 h-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="flex items-baseline gap-2 mb-2">
+                        <span id="cpu-val" class="text-4xl font-black italic">0</span>
+                        <span class="text-sm font-bold opacity-50">%</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div id="cpu-bar" class="h-full bg-cyan-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p id="cpu-desc" class="text-[9px] mt-4 text-slate-500 uppercase font-bold">Velocidad de base: Esperando datos...</p>
+                </div>
+
+
+
+                <!-- RAM Monitor (ID canónico que usa el Python) -->
+                <div class="col-span-12 md:col-span-4 tech-panel p-6 text-neon-amber">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest">System Memory (RAM)</span>
+                        <svg class="w-4 h-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="flex items-baseline gap-2 mb-2">
+                        <span id="ram-val" class="text-4xl font-black italic text-white">0</span>
+                        <span class="text-sm font-bold opacity-50 text-neon-amber">%</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div id="ram-bar" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <button onclick="saveRam()" class="arcade-btn mt-4 w-full rounded-none skew-x-[-15deg] border-green-500/50 text-green-400 hover:bg-green-500 hover:text-black cursor-pointer py-2">
+                        <div class="skew-x-[15deg] flex items-center justify-center gap-2">
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/>
+                            </svg>
+                            <span class="text-[9px]">Activar Modo Lite</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Conexiones (req-min canónico) -->
+                <div class="col-span-12 md:col-span-4 tech-panel p-6 text-neon-green">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest">Conexiones</span>
+                        <svg class="w-4 h-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="flex items-baseline gap-2 mb-2">
+                        <span id="req-min" class="text-4xl font-black italic text-white">0</span>
+                        <span class="text-sm font-bold opacity-50 text-neon-green">req</span>
+                    </div>
+                    <p class="text-[9px] mt-4 text-slate-500 uppercase font-bold">Última conexión</p>
+                </div>
+
+                <!-- Uptime (grande en métricas) -->
+                <div class="col-span-12 md:col-span-8 tech-panel p-6 text-neon-cyan">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest">Tiempo de Actividad</span>
+                        <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e] animate-pulse"></div>
+                    </div>
+                    <div class="text-5xl font-black italic font-mono text-neon-cyan" id="uptime-val-display">00:00:00</div>
+                    <p class="text-[9px] mt-4 text-slate-500 uppercase font-bold">Servidor activo — Puerto 8000</p>
+                </div>
+
+                <!-- Terminal detallado -->
+                <div class="col-span-12 tech-panel p-6 border-white/5">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-neon-green"></div>
+                            <h3 class="text-xs font-black uppercase tracking-[0.2em]">Registro Detallado de Operaciones</h3>
+                        </div>
+                        <span class="text-[10px] font-mono text-slate-600">MODO: VERBOSE</span>
+                    </div>
+                    <div id="metric-logs" class="bg-black/80 border border-white/5 p-5 font-mono text-[10px] h-[300px] overflow-y-auto space-y-2 text-slate-400 rounded-lg">
+                        <div class="flex gap-4"><span class="text-slate-600">[INIT]</span> <span class="text-neon-cyan">[BOOT]</span> <span>Sistema inicializado. Escuchando en puerto 8000.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================================
+             SECCIÓN: COMO USAR (Widgets)
+        ===================================================== -->
+        <div id="tab-widgets" class="tab-section">
+            <div class="mb-8">
+                <h2 class="text-sm font-black uppercase tracking-[0.3em] text-slate-500 mb-1">Documentación de Módulos</h2>
+                <div class="h-px bg-white/5 w-full"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Arquitecto -->
+                <div onclick="openInBrowser('https://github.com/Android-Play01')"
+                     class="tech-panel p-6 text-neon-cyan cursor-pointer group">
+                    <div class="p-3 bg-cyan-500/10 border border-cyan-500/20 group-hover:border-cyan-500/50 transition-all inline-block mb-4">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-black text-lg italic uppercase mb-2 text-white group-hover:text-neon-cyan">Arquitecto</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Gestiona capas y elementos visuales en tiempo real dentro del OBS.</p>
+                    <div class="mt-4 text-neon-cyan font-black text-xs flex items-center gap-2 uppercase tracking-widest group-hover:gap-4 transition-all">
+                        Guía paso a paso
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Controlador -->
+                <div onclick="openInBrowser('https://github.com/Android-Play01')"
+                     class="tech-panel p-6 text-neon-purple cursor-pointer group">
+                    <div class="p-3 bg-purple-500/10 border border-purple-500/20 group-hover:border-purple-500/50 transition-all inline-block mb-4">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-black text-lg italic uppercase mb-2 text-white group-hover:text-neon-purple">Controlador</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Carga skins, banderas y actualiza marcadores rápidamente desde el dock.</p>
+                    <div class="mt-4 text-neon-purple font-black text-xs flex items-center gap-2 uppercase tracking-widest group-hover:gap-4 transition-all">
+                        Guía paso a paso
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Panel -->
+                <div onclick="openInBrowser('https://github.com/Android-Play01')"
+                     class="tech-panel p-6 text-neon-amber cursor-pointer group">
+                    <div class="p-3 bg-amber-500/10 border border-amber-500/20 group-hover:border-amber-500/50 transition-all inline-block mb-4">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-black text-lg italic uppercase mb-2 text-white group-hover:text-neon-amber">Panel</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Visualiza y controla el estado general de las partidas mediante conexión vía API.</p>
+                    <div class="mt-4 text-neon-amber font-black text-xs flex items-center gap-2 uppercase tracking-widest group-hover:gap-4 transition-all">
+                        Guía paso a paso
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER WARNING
+    ============================================================ -->
+    <footer class="h-10 bg-amber-500 flex items-center justify-center px-8 z-20 shrink-0">
+        <div class="flex items-center gap-3 text-black font-black text-[11px] uppercase tracking-tighter">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <span>Precaución: No cerrar esta ventana mientras los modulos estén en uso. La desconexión será inmediata.</span>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+         TOAST NOTIFICATION
+    ============================================================ -->
+    <div id="copy-toast"
+         class="fixed bottom-12 right-8 text-black px-8 py-3 font-black text-xs opacity-0 translate-y-10 transition-all duration-300 z-[100] shadow-[0_0_20px_rgba(0,242,255,0.4)] pointer-events-none"
+         style="background: #00f2ff;">
+        SISTEMA: URL COPIADA AL PORTAPAPELES
+    </div>
+
+    <!-- ============================================================
+         MODAL: TURBO RAM
+    ============================================================ -->
+    <div id="ram-modal-overlay"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+        <div id="ram-modal-box"
+             class="w-[400px] border-2 border-green-500 bg-[#0a0a0e] p-1 scale-90 transition-transform duration-200">
+            <div class="border border-green-500/30 p-8 flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-green-500/10 border-2 border-green-500 flex items-center justify-center text-green-500 mb-6">
+                    <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-black italic text-white uppercase mb-4 tracking-tighter">¿Activar Modo Eficiencia?</h3>
+                <p class="text-sm text-slate-400 mb-8 leading-relaxed">La interfaz visual se cerrará para liberar recursos. El servidor continuará operando en segundo plano mediante consola.</p>
+                <div class="flex w-full gap-4">
+                    <button onclick="closeRamModal()"
+                        class="flex-1 py-3 bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+                        Abortar
+                    </button>
+                    <button onclick="confirmRamSave()"
+                        class="flex-1 py-3 bg-green-500 text-black text-xs font-black uppercase tracking-widest hover:bg-green-400 transition-all">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         JAVASCRIPT
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // PROTECCIÓN JavaScript completa (idéntica al original)
+        // ============================================================
+
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('selectstart', function(e) { e.preventDefault(); });
+        document.addEventListener('dragstart',   function(e) { e.preventDefault(); });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12') { e.preventDefault(); }
+            if (e.ctrlKey && ['u','U','s','S','a','A','c','C'].includes(e.key)) { e.preventDefault(); }
+            if (e.ctrlKey && e.shiftKey && ['i','I','j','J','c','C'].includes(e.key)) { e.preventDefault(); }
+            if (e.ctrlKey && ['+','-','=','_','0'].includes(e.key)) { e.preventDefault(); }
+        });
+
+        document.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) { e.preventDefault(); }
+        }, { passive: false });
+
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) { e.preventDefault(); }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) { e.preventDefault(); }
+        }, { passive: false });
+
+        // ============================================================
+        // NAVEGACIÓN DE TABS
+        // ============================================================
+
+        let currentTab = 'dashboard';
+
+        function switchTab(tabId, btn) {
+            if (currentTab === tabId) return;
+
+            // Ocultar sección actual
+            document.getElementById('tab-' + currentTab).classList.remove('active');
+
+            // Mostrar nueva sección
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Actualizar botones nav
+            document.querySelectorAll('nav button').forEach(b => {
+                b.classList.remove('border-neon-cyan', 'text-white');
+                b.classList.add('border-transparent', 'text-slate-500');
+            });
+            btn.classList.remove('border-transparent', 'text-slate-500');
+            btn.classList.add('border-neon-cyan', 'text-white');
+
+            currentTab = tabId;
+        }
+
+        // ============================================================
+        // FUNCIONES CORE (canal Python via document.title)
+        // ============================================================
+
+        function openInBrowser(url) {
+            document.title = 'PYEvent:open|' + url;
+        }
+
+        function copyToClipboard(text) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            const toast = document.getElementById('copy-toast');
+            toast.classList.remove('opacity-0', 'translate-y-10');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-10');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2500);
+
+
+        }
+
+        // ============================================================
+        // TURBO RAM MODAL
+        // ============================================================
+
+        function saveRam() {
+            const overlay = document.getElementById('ram-modal-overlay');
+            const box     = document.getElementById('ram-modal-box');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            box.classList.remove('scale-90');
+        }
+
+        function closeRamModal() {
+            const overlay = document.getElementById('ram-modal-overlay');
+            const box     = document.getElementById('ram-modal-box');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            box.classList.add('scale-90');
+        }
+
+        function confirmRamSave() {
+            closeRamModal();
+            document.title = 'PYEvent:ram_save';
+        }
+
+        // ============================================================
+        // TERMINAL DE LOGS
+        // Escribe en ambos terminales (dashboard + métricas)
+        // El Python puede llamar addTerminalLog() o escribir en #terminal-logs
+        // ============================================================
+
+        function addTerminalLog(msg, isHighlight) {
+            const time = new Date().toLocaleTimeString();
+            const color = isHighlight ? 'text-neon-cyan' : 'text-slate-400';
+            const logHTML = `<div class="flex gap-4"><span class="text-slate-600">[${time}]</span><span class="${color}">${msg}</span></div>`;
+
+            const dashTerm   = document.getElementById('terminal-logs');
+            const metricTerm = document.getElementById('metric-logs');
+
+            if (dashTerm) {
+                // Elimina placeholder si existe
+                const ph = dashTerm.querySelector('.italic');
+                if (ph) ph.remove();
+                dashTerm.insertAdjacentHTML('afterbegin', logHTML);
+                dashTerm.scrollTop = 0;
+            }
+            if (metricTerm) {
+                metricTerm.insertAdjacentHTML('afterbegin', logHTML);
+                metricTerm.scrollTop = 0;
+            }
+        }
+
+        // ============================================================
+        // SINCRONIZACIÓN: ram-val / ram-bar sidebar desde los canónicos
+        // El Python escribe en #ram-val y #ram-bar (sección Métricas).
+        // Un MutationObserver espeja esos valores al sidebar.
+        // ============================================================
+
+        function syncRamSidebar() {
+            const valMetric = document.getElementById('ram-val');
+            const barMetric = document.getElementById('ram-bar');
+            const valSide   = document.getElementById('ram-val-sidebar');
+            const barSide   = document.getElementById('ram-bar-sidebar');
+
+            if (!valMetric || !valSide) return;
+
+            // Espejo inicial
+            valSide.textContent = valMetric.textContent;
+            if (barMetric && barSide) barSide.style.width = barMetric.style.width;
+
+            // Observer para cambios futuros
+            const obs = new MutationObserver(() => {
+                valSide.textContent = valMetric.textContent;
+                if (barMetric && barSide) barSide.style.width = barMetric.style.width;
+            });
+            obs.observe(valMetric, { childList: true, subtree: true, characterData: true });
+            if (barMetric) obs.observe(barMetric, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        // Uptime display espejo: el Python escribe en #uptime-val,
+        // aquí lo espejeamos al display grande de métricas
+        function syncUptimeDisplay() {
+            const src  = document.getElementById('uptime-val');
+            const disp = document.getElementById('uptime-val-display');
+            if (!src || !disp) return;
+
+            disp.textContent = src.textContent;
+            const obs = new MutationObserver(() => {
+                disp.textContent = src.textContent;
+            });
+            obs.observe(src, { childList: true, subtree: true, characterData: true });
+        }
+
+        // Req-min espejo: Python escribe en #req-min (Métricas),
+        // sidebar muestra #req-min-sidebar
+        function syncReqMinSidebar() {
+            const src  = document.getElementById('req-min');
+            const side = document.getElementById('req-min-sidebar');
+            if (!src || !side) return;
+
+            const obs = new MutationObserver(() => {
+                side.innerHTML = src.textContent + ' <span class="text-slate-600 font-normal normal-case">/ último min</span>';
+            });
+            obs.observe(src, { childList: true, subtree: true, characterData: true });
+        }
+
+        // Sync CPU bar y valor (Python escribe en #cpu-val)
+        function syncCpuBar() {
+            const val = document.getElementById('cpu-val');
+            const bar = document.getElementById('cpu-bar');
+            if (!val || !bar) return;
+
+            const obs = new MutationObserver(() => {
+                const pct = parseFloat(val.textContent) || 0;
+                bar.style.width = pct + '%';
+            });
+            obs.observe(val, { childList: true, subtree: true, characterData: true });
+        }
+
+
+
+        // Sync RAM bar desde valor (respaldo por si Python solo escribe el texto)
+        function syncRamBar() {
+            const val = document.getElementById('ram-val');
+            const bar = document.getElementById('ram-bar');
+            if (!val || !bar) return;
+
+            const obs = new MutationObserver(() => {
+                const pct = parseFloat(val.textContent) || 0;
+                bar.style.width = pct + '%';
+            });
+            obs.observe(val, { childList: true, subtree: true, characterData: true });
+        }
+
+        // Inicializar sincronizaciones al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            syncRamSidebar();
+            syncUptimeDisplay();
+            syncReqMinSidebar();
+            syncCpuBar();
+            syncRamBar();
+        });
+
+    </script>
+</body>
+</html>

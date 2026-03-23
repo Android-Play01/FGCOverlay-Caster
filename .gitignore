@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# PyInstaller (No queremos subir lo compilado, solo el código)
+build/
+dist/
+*.spec
+_internal/
+
+# Otros
+.vscode/
+.idea/

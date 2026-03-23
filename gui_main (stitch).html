@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" name="viewport"/>
+    <title>FGC Overlay Server</title>
+    <!-- Usamos tailwind local para garantizar funcionamiento offline -->
+    <script src="tailwind.js"></script>
+    <style>
+        /* ============================================================
+           PROTECCIÓN: Deshabilita selección de texto y arrastre global
+        ============================================================ */
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            touch-action: none;          /* Bloquea zoom táctil (pinch-to-zoom) */
+            -ms-content-zooming: none;   /* Bloquea zoom en IE/Edge legacy */
+        }
+
+        img {
+            -webkit-user-drag: none;
+            user-drag: none;
+            pointer-events: none; /* Bloquea clic/arrastre sobre imágenes */
+        }
+        /* ============================================================ */
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #0c0c10;
+            color: #e2e8f0;
+            margin: 0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+        .glass-sidebar {
+            background: rgba(15, 15, 20, 0.6);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease-out;
+        }
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(34, 211, 238, 0.3);
+        }
+        .sidebar-item-active {
+            background: linear-gradient(90deg, rgba(34, 211, 238, 0.1) 0%, rgba(34, 211, 238, 0) 100%);
+            border-left: 3px solid #22d3ee;
+            color: #22d3ee !important;
+            transition: all 0.3s ease-in-out;
+        }
+        .sidebar-item-inactive {
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease-in-out;
+        }
+        .warning-footer {
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.03) 0%, rgba(251, 191, 36, 0.06) 100%);
+            border-top: 1px solid rgba(251, 191, 36, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    </style>
+</head>
+<body class="text-slate-200">
+    <div class="w-full h-full flex overflow-hidden relative">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 glass-sidebar flex flex-col shrink-0">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-10">
+                    <div class="w-10 h-10 flex items-center justify-center">
+                        <img src="logo2.png" alt="Logo" draggable="false" class="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-white tracking-tight leading-none">FGC Overlay</h1>
+                        <span class="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Caster Server</span>
+                    </div>
+                </div>
+
+                <nav class="space-y-1">
+                    <button onclick="switchSection('dashboard', this)" class="sidebar-item-active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-white/5">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                        Dashboard
+                    </button>
+                    <button onclick="switchSection('stats', this)" class="sidebar-item-inactive w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        Estadísticas
+                    </button>
+                    <button onclick="switchSection('widgets', this)" class="sidebar-item-inactive w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                        Como usar
+                    </button>
+                </nav>
+            </div>
+
+            <div class="mt-auto p-5 border-t border-white/5">
+                <div onclick="openInBrowser('http://localhost:8000/arquitecto.html')"
+                     class="group cursor-pointer rounded-xl p-3 transition-all duration-300"
+                     style="background: rgba(34,211,238,0.05); border: 1px solid rgba(34,211,238,0.15);"
+                     onmouseover="this.style.background='rgba(34,211,238,0.10)'; this.style.borderColor='rgba(34,211,238,0.35)'; this.style.boxShadow='0 0 14px rgba(34,211,238,0.12)';"
+                     onmouseout="this.style.background='rgba(34,211,238,0.05)'; this.style.borderColor='rgba(34,211,238,0.15)'; this.style.boxShadow='none';">
+                    <p class="text-[9px] uppercase font-bold mb-1" style="color:rgba(34,211,238,0.55); letter-spacing:0.2em;">Arquitecto</p>
+                    <p class="text-[11px] text-slate-400 leading-tight">Crea tus propios overlays</p>
+                    <div class="mt-2 flex items-center gap-1 text-[11px] font-bold text-white transition-colors duration-300 group-hover:text-cyan-400">
+                        Abrir
+                        <svg class="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden relative">
+            <div class="flex-1 overflow-y-auto p-8 relative">
+                
+                <!-- Section: Dashboard (Modules) -->
+                <div id="section-dashboard" class="transition-all duration-300">
+                    <!-- Barra superior: estado + RAM -->
+                    <div class="flex items-center justify-between pb-4 mb-6" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-green-400">Servidor Activo</span>
+                            </div>
+                            <div class="h-3 w-px" style="background:rgba(255,255,255,0.12);"></div>
+                            <span class="text-[10px] text-slate-500">Puerto: <span class="text-slate-200 font-mono">8000</span></span>
+                        </div>
+                        <button onclick="saveRam()" class="flex items-center gap-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-green-500/20">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 1 C13.5 2 14.5 4 14.5 6.5 C14.5 10.2 11.8 13 8.5 13 C7.2 13 6 12.5 5.1 11.7 C5.6 10.2 7 9 8.8 7.8 C10.5 6.7 11.5 5 11.5 5 C11.5 5 10.2 6.8 8.2 8 C6.5 9 5.5 10.5 5.5 12 C5.2 11.3 5 10.5 5 9.5 C5 6.2 8 2.5 12 1 Z" fill="currentColor"/>
+                                <line x1="8.5" y1="13" x2="8.5" y2="15.2" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                                <path d="M8.5 14.5 C8.5 14.5 7.2 14.8 6.5 15.5" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" fill="none"/>
+                            </svg>
+                            Ahorro de RAM
+                        </button>
+                    </div>
+                    <!-- Título sección -->
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-cyan-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                            </svg>
+                            Módulos de Integración
+                        </h2>
+                        <p class="text-slate-400 text-sm">Haz clic en un módulo para abrirlo o usa el botón para copiar su URL.</p>
+                    </div>
+
+                    <div class="grid gap-4">
+                        <!-- Module 1 -->
+                        <div onclick="openInBrowser('http://localhost:8000/arquitecto.html?obs=1')" class="glass-card rounded-2xl p-5 flex items-center justify-between group cursor-pointer">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/20 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white">Arquitecto (Fuente OBS)</h3>
+                                    <p class="text-xs font-mono text-slate-500">http://localhost:8000/arquitecto.html?obs=1</p>
+                                </div>
+                            </div>
+                            <button onclick="event.stopPropagation(); copyToClipboard('http://localhost:8000/arquitecto.html?obs=1')" class="bg-white/5 hover:bg-cyan-500 text-slate-300 hover:text-white px-5 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2 no-drag relative z-10">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                COPIAR URL
+                            </button>
+                        </div>
+                        <!-- Module 2 -->
+                        <div onclick="openInBrowser('http://localhost:8000/controlador.html')" class="glass-card rounded-2xl p-5 flex items-center justify-between group cursor-pointer">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500/20 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white">Controlador (Dock)</h3>
+                                    <p class="text-xs font-mono text-slate-500">http://localhost:8000/controlador.html</p>
+                                </div>
+                            </div>
+                            <button onclick="event.stopPropagation(); copyToClipboard('http://localhost:8000/controlador.html')" class="bg-white/5 hover:bg-purple-500 text-slate-300 hover:text-white px-5 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2 no-drag relative z-10">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                COPIAR URL
+                            </button>
+                        </div>
+                        <!-- Module 3 -->
+                        <div onclick="openInBrowser('http://localhost:8000/Panel.html')" class="glass-card rounded-2xl p-5 flex items-center justify-between group cursor-pointer">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 group-hover:bg-amber-500/20 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white">Panel de Datos (Base)</h3>
+                                    <p class="text-xs font-mono text-slate-500">http://localhost:8000/Panel.html</p>
+                                </div>
+                            </div>
+                            <button onclick="event.stopPropagation(); copyToClipboard('http://localhost:8000/Panel.html')" class="bg-white/5 hover:bg-amber-500 text-slate-300 hover:text-white px-5 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2 no-drag relative z-10">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                COPIAR URL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Stats (Hidden) -->
+                <div id="section-stats" class="hidden opacity-0 transition-all duration-300">
+                    <h2 class="text-2xl font-bold text-white mb-6">Monitor del Sistema</h2>
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="glass-card rounded-2xl p-6">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-4">Uptime</span>
+                            <div id="uptime-val" class="text-3xl font-bold text-cyan-400 neon-glow-cyan">00:00:00</div>
+                        </div>
+                        <div class="glass-card rounded-2xl p-6">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-4">Conexiones</span>
+                            <div id="req-min" class="text-3xl font-bold text-white">0</div>
+                            <span class="text-[8px] text-slate-500">Último minuto</span>
+                        </div>
+                        <div class="glass-card rounded-2xl p-6">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-4">Memoria RAM</span>
+                            <div id="ram-val" class="text-3xl font-bold text-white mb-2">0%</div>
+                            <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div id="ram-bar" class="h-full bg-cyan-500 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <button onclick="saveRam()" class="w-full mt-4 flex items-center justify-center gap-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 py-2 rounded-xl text-[10px] font-bold transition-all border border-green-500/20">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 1 C13.5 2 14.5 4 14.5 6.5 C14.5 10.2 11.8 13 8.5 13 C7.2 13 6 12.5 5.1 11.7 C5.6 10.2 7 9 8.8 7.8 C10.5 6.7 11.5 5 11.5 5 C11.5 5 10.2 6.8 8.2 8 C6.5 9 5.5 10.5 5.5 12 C5.2 11.3 5 10.5 5 9.5 C5 6.2 8 2.5 12 1 Z" fill="currentColor"/>
+                                    <line x1="8.5" y1="13" x2="8.5" y2="15.2" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                                    <path d="M8.5 14.5 C8.5 14.5 7.2 14.8 6.5 15.5" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" fill="none"/>
+                                </svg>
+                                AHORRO DE RAM
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Terminal logs -->
+                    <div class="mt-8">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-4">Logs del Servidor</span>
+                        <div id="terminal-logs-container" class="glass-card rounded-2xl h-48 bg-black/40 p-4 font-mono text-[11px] overflow-y-auto space-y-1">
+                            <div class="text-slate-500 italic">Esperando actividad...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Como usar (Hidden) -->
+                <div id="section-widgets" class="hidden opacity-0 transition-all duration-300">
+                    <h2 class="text-2xl font-bold text-white mb-6">Como usar</h2>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div onclick="openInBrowser('https://github.com/Android-Play01')" class="glass-card rounded-2xl p-6 cursor-pointer group">
+                            <h3 class="font-bold text-lg mb-2">Arquitecto</h3>
+                            <p class="text-slate-400 text-sm">Gestiona capas y elementos visuales en tiempo real.</p>
+                            <div class="mt-4 text-cyan-400 font-bold text-xs flex items-center gap-2 uppercase tracking-widest group-hover:gap-4 transition-all">
+                                Guia paso a paso <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                            </div>
+                        </div>
+                        <div onclick="openInBrowser('https://github.com/Android-Play01')" class="glass-card rounded-2xl p-6 cursor-pointer group">
+                            <h3 class="font-bold text-lg mb-2">Controlador</h3>
+                            <p class="text-slate-400 text-sm">Carga skins, banderas y actualiza marcadores rápidamente.</p>
+                            <div class="mt-4 text-purple-400 font-bold text-xs flex items-center gap-2 uppercase tracking-widest group-hover:gap-4 transition-all">
+                                Guia paso a paso <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                            </div>
+                        </div>
+                        <div onclick="openInBrowser('https://github.com/Android-Play01')" class="glass-card rounded-2xl p-6 cursor-pointer group">
+                            <h3 class="font-bold text-lg mb-2">Panel</h3>
+                            <p class="text-slate-400 text-sm">Visualiza y controla el estado general de la base de datos.</p>
+                            <div class="mt-4 text-amber-400 font-bold text-xs flex items-center gap-2 uppercase tracking-widest group-hover:gap-4 transition-all">
+                                Guia paso a paso <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Config (Hidden) -->
+                <div id="section-config" class="hidden opacity-0 transition-all duration-300">
+                    <h2 class="text-2xl font-bold text-white mb-6">Ajustes del Sistema</h2>
+                    <div class="space-y-4 max-w-md">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Carpetas de Datos</label>
+                        <button onclick="document.title='PYEvent:open|assets'" class="w-full glass-card rounded-xl p-4 flex items-center justify-between">
+                            <span class="font-medium">Directorio de Assets</span>
+                            <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                        </button>
+                        <button onclick="document.title='PYEvent:open|saves'" class="w-full glass-card rounded-xl p-4 flex items-center justify-between">
+                            <span class="font-medium">Configuraciones Guardadas</span>
+                            <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Warning Footer -->
+            <footer class="warning-footer px-8 py-4 flex items-center gap-4 z-40">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <p class="text-[13px] font-medium text-amber-500/80 tracking-tight">
+                    No cierres esta ventana mientras usas el Overlay. Si la cierras, se desconectan los paneles.
+                </p>
+            </footer>
+
+            <!-- Footer toast notification -->
+            <div id="copy-toast" class="absolute bottom-10 left-1/2 -translate-x-1/2 bg-cyan-600 text-white px-8 py-3 rounded-full font-bold text-xs opacity-0 pointer-events-none translate-y-10 transition-all duration-300 z-50 flex items-center gap-3 shadow-xl">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                URL COPIADA EXITOSAMENTE
+            </div>
+
+            <!-- Modal: Ahorro de RAM -->
+            <div id="ram-modal-overlay" class="absolute inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+                <div id="ram-modal-box" class="w-80 rounded-2xl border border-white/10 p-6 flex flex-col gap-4" style="background: #0f1117; transform: translateY(12px); transition: transform 0.2s ease;">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-green-400" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 16 16">
+                                <path d="M12 1 C13.5 2 14.5 4 14.5 6.5 C14.5 10.2 11.8 13 8.5 13 C7.2 13 6 12.5 5.1 11.7 C5.6 10.2 7 9 8.8 7.8 C10.5 6.7 11.5 5 11.5 5 C11.5 5 10.2 6.8 8.2 8 C6.5 9 5.5 10.5 5.5 12 C5.2 11.3 5 10.5 5 9.5 C5 6.2 8 2.5 12 1 Z" fill="currentColor"/>
+                                <line x1="8.5" y1="13" x2="8.5" y2="15.2" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                                <path d="M8.5 14.5 C8.5 14.5 7.2 14.8 6.5 15.5" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" fill="none"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-white text-sm">Ahorro de RAM</p>
+                            <p class="text-[10px] text-green-400 font-bold uppercase tracking-widest">Modo Eficiencia</p>
+                        </div>
+                    </div>
+                    <div class="rounded-xl p-3 text-xs text-slate-400 leading-relaxed" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                        <p>Esta ventana se cerrará y el servidor continuará activo en una <span class="text-white font-semibold">consola de bajo consumo</span>.</p>
+                        <p class="text-slate-500 mt-2">Para volver a la interfaz, reinicia el programa.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="closeRamModal()" class="flex-1 py-2 rounded-xl text-xs font-bold text-slate-400 transition-all hover:bg-white/5" style="border: 1px solid rgba(255,255,255,0.08);">
+                            Cancelar
+                        </button>
+                        <button onclick="confirmRamSave()" class="flex-1 py-2 rounded-xl text-xs font-bold text-white transition-all" style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3);" onmouseover="this.style.background='rgba(34,197,94,0.25)'" onmouseout="this.style.background='rgba(34,197,94,0.15)'">
+                            Confirmar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ============================================================
+        // PROTECCIÓN JavaScript: Bloquea clic derecho, selección,
+        // arrastre de elementos, atajos de teclado de DevTools
+        // y zoom (teclado, rueda del mouse y táctil)
+        // ============================================================
+
+        // Bloquea clic derecho (menú contextual)
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquea selección de texto con el mouse
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquea arrastre de cualquier elemento
+        document.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquea atajos de teclado comunes para inspeccionar / copiar
+        document.addEventListener('keydown', function(e) {
+            // F12 - DevTools
+            if (e.key === 'F12') {
+                e.preventDefault();
+            }
+            // Ctrl+U - Ver código fuente
+            // Ctrl+S - Guardar página
+            // Ctrl+A - Seleccionar todo
+            // Ctrl+C - Copiar
+            if (e.ctrlKey && ['u', 'U', 's', 'S', 'a', 'A', 'c', 'C'].includes(e.key)) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C - DevTools
+            if (e.ctrlKey && e.shiftKey && ['i', 'I', 'j', 'J', 'c', 'C'].includes(e.key)) {
+                e.preventDefault();
+            }
+            // Ctrl++ / Ctrl+- / Ctrl+0 - Zoom con teclado
+            if (e.ctrlKey && ['+', '-', '=', '_', '0'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        // Bloquea zoom con rueda del mouse (Ctrl + scroll)
+        document.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Bloquea zoom táctil (pinch-to-zoom) en dispositivos touch
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // ============================================================
+        // Lógica original de la aplicación (sin cambios)
+        // ============================================================
+
+        let currentSection = 'dashboard';
+
+        function switchSection(sectionId, btn) {
+            if(currentSection === sectionId) return;
+
+            // Update sidebar buttons
+            document.querySelectorAll('aside nav button').forEach(el => {
+                el.classList.remove('sidebar-item-active');
+                el.classList.remove('text-cyan-400');
+                el.classList.add('text-slate-400');
+            });
+            btn.classList.add('sidebar-item-active');
+            btn.classList.remove('text-slate-400');
+
+            // Switch visibility
+            const oldSec = document.getElementById('section-' + currentSection);
+            const newSec = document.getElementById('section-' + sectionId);
+
+            if(oldSec) {
+                oldSec.classList.add('opacity-0');
+                setTimeout(() => {
+                    oldSec.classList.add('hidden');
+                    if(newSec) {
+                        newSec.classList.remove('hidden');
+                        setTimeout(() => newSec.classList.remove('opacity-0'), 50);
+                    }
+                }, 150);
+            }
+            currentSection = sectionId;
+        }
+
+        function openInBrowser(url) {
+            document.title = 'PYEvent:open|' + url;
+        }
+
+        function copyToClipboard(text) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            const toast = document.getElementById('copy-toast');
+            toast.classList.remove('opacity-0', 'translate-y-10');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-10');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2500);
+        }
+
+        function saveRam() {
+            const overlay = document.getElementById('ram-modal-overlay');
+            const box = document.getElementById('ram-modal-box');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            overlay.classList.add('opacity-100');
+            box.style.transform = 'translateY(0)';
+        }
+
+        function closeRamModal() {
+            const overlay = document.getElementById('ram-modal-overlay');
+            const box = document.getElementById('ram-modal-box');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            overlay.classList.remove('opacity-100');
+            box.style.transform = 'translateY(12px)';
+        }
+
+        function confirmRamSave() {
+            closeRamModal();
+            document.title = 'PYEvent:ram_save';
+        }
+
+        function addTerminalLog(line, isHighlight) {
+            const term = document.getElementById('terminal-logs-container');
+            if(!term) return;
+            
+            // Remove placeholder if present
+            const placeholder = term.querySelector('div.italic');
+            if (placeholder) placeholder.remove();
+
+            const div = document.createElement('div');
+            div.className = 'text-cyan-400';
+            div.innerText = line;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+        }
+    </script>
+</body>
+</html>

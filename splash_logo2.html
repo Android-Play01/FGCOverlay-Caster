@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <title>FGC Overlay - Splash Screen</title>
+    <style>
+        /* ============================================================
+           PROTECCIÓN: Deshabilita selección de texto y arrastre global
+        ============================================================ */
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            touch-action: none;          /* Bloquea zoom táctil (pinch-to-zoom) */
+            -ms-content-zooming: none;   /* Bloquea zoom en IE/Edge legacy */
+        }
+
+        img {
+            -webkit-user-drag: none;
+            user-drag: none;
+            pointer-events: none; /* Bloquea clic/arrastre sobre imágenes */
+        }
+        /* ============================================================ */
+
+        body {
+            background-color: #0b0e14;
+            color: #ffffff;
+            overflow: hidden;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .splash-container {
+            width: 349px;
+            height: 127px;
+            background-color: #0b0e14;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Branding Section */
+        .branding-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 10px;
+            width: 100%;
+            height: 50px;
+        }
+
+        /* Logo Reveal Animation */
+        .logo-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid #06b6d4;
+            background-color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+            overflow: hidden;
+            z-index: 10;
+            
+            /* Animation */
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            opacity: 0;
+            animation: fadeInScale 0.6s ease-out forwards, 
+                       slideLeftToReveal 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.2s forwards,
+                       pulseGlow 2s infinite ease-in-out;
+        }
+
+        .logo-box img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        /* Text Box Reveal Animation */
+        .text-box {
+            text-align: left;
+            z-index: 5;
+            opacity: 0;
+            transform: translateX(0px);
+            white-space: nowrap;
+            padding-left: 45px;
+            animation: slideOutText 0.7s cubic-bezier(0.65, 0, 0.35, 1) 1.2s forwards;
+        }
+
+        .main-title {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            margin: 0;
+            display: flex;
+            gap: 5px;
+            text-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+        }
+
+        .fgc { color: #22d3ee; }
+        .overlay { color: #f8fafc; }
+
+        .sub-title {
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+            color: #94a3b8;
+            margin: 2px 0 0 0;
+            font-weight: 600;
+        }
+
+        .by-text {
+            font-size: 6px;
+            font-style: italic;
+            color: #cbd5e1;
+            text-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+            margin-top: 2px;
+        }
+
+        /* Loader Sequence */
+        .loader-section {
+            width: 140px;
+            margin-top: 5px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInLoader 0.5s ease-out 1.9s forwards;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #22d3ee, #fbbf24);
+            animation: progressFill 4s ease-in-out 2.2s forwards;
+        }
+
+        .loader-text {
+            font-size: 7px;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: rgba(6, 182, 212, 0.8);
+            font-weight: 800;
+        }
+
+        /* KEYFRAMES */
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.8); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        }
+
+        @keyframes slideLeftToReveal {
+            0% { left: 50%; transform: translateX(-50%); }
+            100% { left: 22%; transform: translateX(0%); }
+        }
+
+        @keyframes slideOutText {
+            0% { opacity: 0; transform: translateX(-20px); }
+            100% { opacity: 1; transform: translateX(15px); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 8px rgba(6, 182, 212, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.4); }
+        }
+
+        @keyframes fadeInLoader {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes progressFill {
+            0% { width: 0%; }
+            30% { width: 45%; }
+            70% { width: 75%; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-container">
+        <div class="branding-section">
+            <div class="logo-box">
+                <img src="logo2.png" alt="Logo" draggable="false">
+            </div>
+            <div class="text-box">
+                <h1 class="main-title">
+                    <span class="fgc">FGC</span>
+                    <span class="overlay">OVERLAY</span>
+                </h1>
+                <p class="sub-title">Production Server</p>
+                <p class="by-text">By: Android Play</p>
+            </div>
+        </div>
+
+        <div class="loader-section">
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+            <div class="loader-text">Initializing Systems...</div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         PROTECCIÓN JavaScript: Bloquea clic derecho, selección,
+         arrastre de elementos, atajos de teclado de DevTools
+         y zoom (teclado, rueda del mouse y táctil)
+    ============================================================ -->
+    <script>
+        // Bloquea clic derecho (menú contextual)
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquea selección de texto con el mouse
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquea arrastre de cualquier elemento
+        document.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+        });
+
+        // Bloquea atajos de teclado comunes para inspeccionar / copiar
+        document.addEventListener('keydown', function(e) {
+            // F12 - DevTools
+            if (e.key === 'F12') {
+                e.preventDefault();
+            }
+            // Ctrl+U - Ver código fuente
+            // Ctrl+S - Guardar página
+            // Ctrl+A - Seleccionar todo
+            // Ctrl+C - Copiar
+            if (e.ctrlKey && ['u', 'U', 's', 'S', 'a', 'A', 'c', 'C'].includes(e.key)) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C - DevTools
+            if (e.ctrlKey && e.shiftKey && ['i', 'I', 'j', 'J', 'c', 'C'].includes(e.key)) {
+                e.preventDefault();
+            }
+            // Ctrl++ / Ctrl+- / Ctrl+0 - Zoom con teclado
+            if (e.ctrlKey && ['+', '-', '=', '_', '0'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        // Bloquea zoom con rueda del mouse (Ctrl + scroll)
+        document.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Bloquea zoom táctil (pinch-to-zoom) en dispositivos touch
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+    <!-- ============================================================ -->
+</body>
+</html>
