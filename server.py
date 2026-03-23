@@ -107,9 +107,9 @@ class FGCHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         # Servir archivos de carpetas del usuario desde DATA_DIR
-        # (overlays, banderas, escudos, redes viven al lado del .exe)
-        user_folders = ('/overlays/', '/banderas/', '/escudos/', '/redes/')
-        if parsed.path.lower().startswith(user_folders) or parsed.path.lower() == '/logo2.png':
+        # (overlays, banderas, escudos, redes, assets viven al lado del .exe)
+        user_folders = ('/overlays/', '/banderas/', '/escudos/', '/redes/', '/assets/')
+        if parsed.path.lower().startswith(user_folders):
             rel_path = urllib.parse.unquote(parsed.path[1:])  # quitar el / inicial
             file_path = os.path.join(DATA_DIR, rel_path)
             if os.path.isfile(file_path):
@@ -251,7 +251,7 @@ if __name__ == '__main__':
             def __init__(self, html_file, width, height):
                 super().__init__()
                 # Establecer icono de la ventana (.png suele renderizar más nítido que .ico en PySide6)
-                icon_path = os.path.join(BASE_DIR, "logo.png")
+                icon_path = os.path.join(BASE_DIR, "assets", "logo.png")
                 self.setWindowIcon(QIcon(icon_path))
                 
                 self.resize(width, height)
@@ -432,7 +432,7 @@ if __name__ == '__main__':
                 self.web_view.page().runJavaScript(js_update)
 
         # Iniciamos con el Splash Screen
-        splash = SplashWindow("splash_logo2.html", 349, 127)
+        splash = SplashWindow("gui_splash.html", 349, 127)
         splash.show()
 
         sys.exit(app.exec())
