@@ -45,7 +45,6 @@ echo.
 xcopy /E /I /Y "banderas" "dist\FGCOverlay-Caster\banderas" >nul
 xcopy /E /I /Y "escudos" "dist\FGCOverlay-Caster\escudos" >nul
 xcopy /E /I /Y "redes" "dist\FGCOverlay-Caster\redes" >nul
-xcopy /E /I /Y "assets" "dist\FGCOverlay-Caster\assets" >nul
 
 :: Crear carpeta overlays vacía si no existe
 if not exist "dist\FGCOverlay-Caster\overlays" mkdir "dist\FGCOverlay-Caster\overlays"
