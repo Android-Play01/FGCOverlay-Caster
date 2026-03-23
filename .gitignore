@@ -8,7 +8,6 @@ venv/
 # PyInstaller (No queremos subir lo compilado, solo el código)
 build/
 dist/
-*.spec
 _internal/
 
 # Otros
