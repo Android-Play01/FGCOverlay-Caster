@@ -465,11 +465,80 @@
         }
 
         /* Format Painter */
+        @keyframes fp-unlock-flash {
+            0%   { background: rgba(245, 200, 66, 0.0);  border-color: transparent;         box-shadow: none; }
+            25%  { background: rgba(245, 200, 66, 0.28); border-color: rgba(245,200,66,0.9); box-shadow: 0 0 16px 4px rgba(245, 200, 66, 0.7); }
+            55%  { background: rgba(245, 200, 66, 0.10); border-color: rgba(245,200,66,0.5); box-shadow: 0 0 8px 2px rgba(245, 200, 66, 0.35); }
+            100% { background: rgba(245, 200, 66, 0.07); border-color: rgba(245,200,66,0.35); box-shadow: 0 0 5px 1px rgba(245, 200, 66, 0.2); }
+        }
+
+        @keyframes fp-icon-unlock {
+            0%   { transform: scale(0.75) rotate(-15deg); opacity: 0.3; filter: drop-shadow(0 0 0px transparent); }
+            50%  { transform: scale(1.25) rotate(6deg);   opacity: 1;   filter: drop-shadow(0 0 6px rgba(245,200,66,1)); }
+            75%  { transform: scale(0.95) rotate(-2deg);  opacity: 1;   filter: drop-shadow(0 0 4px rgba(245,200,66,0.7)); }
+            100% { transform: scale(1)    rotate(0deg);   opacity: 1;   filter: drop-shadow(0 0 3px rgba(245,200,66,0.5)); }
+        }
+
+        .prop-tool-btn#btn-format-painter.layer-selected {
+            color: #f5c842;
+            border-width: 1px;
+            border-style: solid;
+            animation: fp-unlock-flash 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .prop-tool-btn#btn-format-painter.layer-selected svg {
+            animation: fp-icon-unlock 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            filter: drop-shadow(0 0 3px rgba(245, 200, 66, 0.5));
+        }
+            0%   { box-shadow: 0 0 6px 1px rgba(245, 200, 66, 0.6), 0 0 14px 3px rgba(245, 160, 20, 0.35); }
+            50%  { box-shadow: 0 0 14px 4px rgba(245, 200, 66, 0.95), 0 0 28px 8px rgba(245, 160, 20, 0.55), inset 0 0 8px rgba(255, 220, 80, 0.15); }
+            100% { box-shadow: 0 0 6px 1px rgba(245, 200, 66, 0.6), 0 0 14px 3px rgba(245, 160, 20, 0.35); }
+        }
+
+        @keyframes fp-icon-wiggle {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            20%       { transform: rotate(-12deg) scale(1.15); }
+            40%       { transform: rotate(10deg) scale(1.1); }
+            60%       { transform: rotate(-6deg) scale(1.05); }
+            80%       { transform: rotate(4deg) scale(1.02); }
+        }
+
+        @keyframes fp-badge-pop {
+            0%   { transform: scale(0.5); opacity: 0; }
+            70%  { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .prop-tool-btn#btn-format-painter {
+            position: relative;
+        }
+
         .prop-tool-btn#btn-format-painter.active {
             color: #f5c842;
-            background: rgba(245, 200, 66, 0.12);
-            border-color: rgba(245, 200, 66, 0.4);
-            box-shadow: 0 0 8px rgba(245, 200, 66, 0.3);
+            background: linear-gradient(135deg, rgba(245, 200, 66, 0.22) 0%, rgba(255, 160, 20, 0.14) 100%);
+            border-color: rgba(245, 200, 66, 0.75);
+            border-width: 2px;
+            animation: fp-pulse 1.4s ease-in-out infinite;
+        }
+
+        .prop-tool-btn#btn-format-painter.active svg {
+            animation: fp-icon-wiggle 0.5s ease-in-out 1;
+            filter: drop-shadow(0 0 4px rgba(245, 200, 66, 0.9));
+        }
+
+        /* Badge verde "ACTIVO" que aparece encima del botón */
+        .prop-tool-btn#btn-format-painter.active::after {
+            content: '●';
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 8px;
+            height: 8px;
+            background: #4cff91;
+            border-radius: 50%;
+            font-size: 0;
+            box-shadow: 0 0 5px #4cff91, 0 0 10px rgba(76, 255, 145, 0.6);
+            animation: fp-badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
         body.format-painter-active,
         body.format-painter-active #workspace,
@@ -3335,6 +3404,7 @@
                 content.style.display = 'none'; 
                 const fpBtnEmpty = document.getElementById('btn-format-painter');
                 fpBtnEmpty.disabled = true;
+                fpBtnEmpty.classList.remove('layer-selected');
                 fpBtnEmpty.querySelector('svg').style.color = '';
                 
                 if (textInner) textInner.style.display = 'none';
@@ -3352,6 +3422,7 @@
                 
                 const fpBtnMulti = document.getElementById('btn-format-painter');
                 fpBtnMulti.disabled = true;
+                fpBtnMulti.classList.remove('layer-selected');
                 fpBtnMulti.querySelector('svg').style.color = '';
 
                 if (textPanelOpen) { 
@@ -3408,7 +3479,15 @@
             const exactlyOne = state.selection.length === 1;
             const fpBtn = document.getElementById('btn-format-painter');
             fpBtn.disabled = !exactlyOne;
-            fpBtn.querySelector('svg').style.color = exactlyOne ? '#f5c842' : '';
+            fpBtn.querySelector('svg').style.color = '';
+            if (exactlyOne) {
+                fpBtn.classList.add('layer-selected');
+                fpBtn.style.animation = 'none'; fpBtn.offsetHeight; fpBtn.style.animation = '';
+                const _fpSvg = fpBtn.querySelector('svg');
+                _fpSvg.style.animation = 'none'; _fpSvg.offsetHeight; _fpSvg.style.animation = '';
+            } else {
+                fpBtn.classList.remove('layer-selected');
+            }
 
             // Swap automáticos de visibilidad si corresponde
             if (isImage && !isTextOrCounter && textPanelOpen) {
@@ -4461,7 +4540,11 @@
 
             state.formatPainter.active = true;
             state.formatPainter.format = fmt;
-            document.getElementById('btn-format-painter').classList.add('active');
+            const fpBtn = document.getElementById('btn-format-painter');
+            fpBtn.classList.add('active');
+            // Re-trigger wiggle animation on every activation
+            const fpSvg = fpBtn.querySelector('svg');
+            if (fpSvg) { fpSvg.style.animation = 'none'; fpSvg.offsetHeight; fpSvg.style.animation = ''; }
             document.body.classList.add('format-painter-active');
             showToast('Formato copiado — haz clic en una capa para aplicar');
         }
