@@ -9,8 +9,8 @@
 
 <style>
     :root {
-        --bg-dark: #151515;
-        --panel-bg: #1e1e1e;
+        --bg-dark: #13141a;
+        --panel-bg: #1c1d26;
         --accent: #00bcd4;
         --accent-hover: #26c6da;
         --text-main: #eee;
@@ -38,8 +38,8 @@
     /* --- BOTÓN REPORTAR (vive en el mismo slot que ACTUALIZAR) --- */
     #btn-report {
         background: rgba(76, 175, 80, 0.08);
-        border: 1px solid #1b3a1e;
-        color: #1b3a1e;
+        border: 1px solid #162d1b;
+        color: #162d1b;
         padding: 4px 0;
         border-radius: 3px;
         font-size: 10px;
@@ -79,8 +79,8 @@
     /* --- BOTÓN INICIAR PARTIDA --- */
     #btn-start-match {
         background: rgba(229, 57, 53, 0.08);
-        border: 1px solid #3a1212;
-        color: #3a1212;
+        border: 1px solid #2e1111;
+        color: #2e1111;
         padding: 4px 0;
         border-radius: 3px;
         font-size: 10px;
@@ -129,16 +129,16 @@
     /* Barra Superior (Presets) */
     .preset-row {
         display: flex; gap: 4px; justify-content: center; padding-bottom: 5px;
-        border-bottom: 1px solid #2a2a2a;
+        border-bottom: 1px solid #252630;
         flex-wrap: wrap;
     }
 
     .preset-btn {
-        background: transparent; border: 1px solid #2a2a2a; color: #666;
+        background: transparent; border: 1px solid #252630; color: #666;
         font-size: 10px; padding: 2px 8px; cursor: pointer; border-radius: 4px;
         transition: 0.2s; font-family: 'Montserrat', sans-serif; font-weight: 700;
     }
-    .preset-btn:hover { border-color: #666; color: #ddd; background: #1a1a1a; }
+    .preset-btn:hover { border-color: #666; color: #ddd; background: #1e1f28; }
     .preset-btn.btn-w { border-color: rgba(0,188,212,0.4); color: var(--accent); opacity: 0.8; }
     .preset-btn.btn-w:hover { background: rgba(0, 188, 212, 0.15); opacity: 1; }
     .preset-btn.btn-l { border-color: rgba(255,152,0,0.4); color: var(--warning); opacity: 0.8; }
@@ -148,7 +148,7 @@
     .preset-btn.fmt-active { background: rgba(0,188,212,0.25); border-color: var(--accent); color: var(--accent); opacity: 1; }
     .preset-btn.link-active { background: rgba(255,152,0,0.18); border-color: var(--warning); color: var(--warning); opacity: 1; }
 
-    .preset-sep { width: 1px; background: #2a2a2a; margin: 0 4px; align-self: stretch; }
+    .preset-sep { width: 1px; background: #252630; margin: 0 4px; align-self: stretch; }
 
     /* Área Principal (Horizontal) */
     .dock-content {
@@ -164,10 +164,10 @@
         display: flex;
         align-items: center;
         gap: 5px;
-        background: #1a1a1a;
+        background: #1e1f28;
         padding: 6px;
         border-radius: 6px;
-        border: 1px solid #2a2a2a;
+        border: 1px solid #252630;
         height: 50px;
         position: relative;
     }
@@ -177,13 +177,13 @@
         height: auto;
         padding: 5px;
         gap: 4px;
-        background: #0f0f0f;
-        border: 1px solid #1a1a1a;
+        background: #0e0f14;
+        border: 1px solid #1e1f28;
     }
 
     /* --- BOTONES Y CONTROLES --- */
     .ctrl-btn {
-        background: #222;
+        background: #1a1b23;
         border: 1px solid #333;
         color: #eee;
         width: 30px;
@@ -196,24 +196,24 @@
         transition: 0.1s;
         font-family: 'Montserrat', sans-serif;
     }
-    .ctrl-btn:hover { background: #2a2a2a; border-color: #555; }
+    .ctrl-btn:hover { background: #252630; border-color: #555; }
     .ctrl-btn:active { transform: scale(0.95); }
 
-    .btn-green { color: #4caf50; border-color: #1b3a1e; background: rgba(76, 175, 80, 0.08); }
+    .btn-green { color: #4caf50; border-color: #162d1b; background: rgba(76, 175, 80, 0.08); }
     .btn-green:hover { background: rgba(76, 175, 80, 0.25); }
 
-    .btn-red { color: #f44336; border-color: #3a1212; background: rgba(244, 67, 54, 0.08); }
+    .btn-red { color: #f44336; border-color: #2e1111; background: rgba(244, 67, 54, 0.08); }
     .btn-red:hover { background: rgba(244, 67, 54, 0.25); }
 
-    .btn-blue { color: #2196f3; border-color: #0d2a4a; background: rgba(33, 150, 243, 0.08); width: auto; padding: 0 6px; font-size: 11px; height: 28px; }
+    .btn-blue { color: #2196f3; border-color: #0c2540; background: rgba(33, 150, 243, 0.08); width: auto; padding: 0 6px; font-size: 11px; height: 28px; }
     .btn-blue:hover { background: rgba(33, 150, 243, 0.25); }
 
     .btn-swap { font-size: 14px; color: var(--accent); width: 30px; height: 25px; }
 
     /* --- INPUTS --- */
     .dock-input {
-        background: #080808;
-        border: 1px solid #2a2a2a;
+        background: #0a0b0f;
+        border: 1px solid #252630;
         color: white;
         padding: 0 8px;
         height: 30px;
@@ -224,7 +224,7 @@
         transition: border-color 0.2s, background-color 0.2s;
     }
     .dock-input:focus { border-color: var(--accent); }
-    .dock-input.pending { border-color: var(--warning); background: #1a1200; color: #ffb74d; }
+    .dock-input.pending { border-color: var(--warning); background: #15100a; color: #ffb74d; }
 
     .score-display {
         font-family: 'Montserrat', sans-serif;
@@ -258,7 +258,7 @@
 
     /* --- BOTÓN UPDATE --- */
     .btn-update {
-        background: #1a1a1a;
+        background: #1e1f28;
         border: 1px solid #333;
         color: #444;
         padding: 4px 0;
@@ -348,7 +348,7 @@
         position: absolute;
         top: 0;
         width: 110px;
-        background: #1a1a1a;
+        background: #1e1f28;
         border: 1px solid var(--accent);
         box-shadow: 0 8px 20px rgba(0,0,0,0.9);
         border-radius: 5px;
@@ -386,7 +386,7 @@
         width: 100%;
         height: 28px;
         cursor: pointer;
-        border: 1px solid #2a2a2a;
+        border: 1px solid #252630;
         opacity: 0.7;
         background: #0a0a0a;
         display: flex;
@@ -421,7 +421,7 @@
         box-shadow: -4px 0 15px rgba(0,0,0,0.8);
         transition: right 0.3s ease;
         z-index: 10000;
-        padding: 15px;
+        padding: 10px 15px;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -463,7 +463,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 6px 0;
-        border-bottom: 1px solid #1e1e1e;
+        border-bottom: 1px solid #1c1d26;
         font-size: 11px;
         color: #aaa;
     }
@@ -645,8 +645,7 @@
 <div id="status-bar">Ready · FGC Controller</div>
 
 <div id="overlay-panel">
-    <button class="close-btn" onclick="toggleOverlayPanel()">✕</button>
-    <h3 style="margin: 0; font-size: 14px; border-bottom: 1px solid #333; padding-bottom: 5px;">Seleccionar Overlay</h3>
+    <h3 style="margin: 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid #252630; padding-bottom: 6px; color: var(--accent);">Seleccionar Overlay</h3>
     <select id="overlay-select" onchange="loadOverlayConfig()">
         <option value="">-- Cargando... --</option>
     </select>
@@ -663,6 +662,18 @@
             <input type="checkbox" id="chk-update-anim" onchange="state.updateAnimEnabled = this.checked">
             <span class="toggle-slider"></span>
         </label>
+    </div>
+    <div class="anim-toggle-row" style="flex-direction: column; align-items: flex-start; gap: 7px; border-bottom: none; padding-bottom: 0;">
+        <span style="color: #aaa; font-size: 11px;">Color de Fondo</span>
+        <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+            <input type="color" id="bg-color-picker" value="#13141a"
+                style="width: 32px; height: 28px; border: 1px solid #252630; background: none; cursor: pointer; padding: 2px; border-radius: 3px; flex-shrink: 0;"
+                oninput="applyBgColor(this.value)">
+            <input type="text" id="bg-color-hex" value="#13141a" maxlength="7"
+                style="flex: 1; background: #0e0f14; border: 1px solid #252630; color: #eee; padding: 5px 8px; font-family: 'Segoe UI', monospace; font-size: 11px; border-radius: 3px; width: 0;"
+                oninput="onHexInput(this.value)"
+                onblur="commitHex(this.value)">
+        </div>
     </div>
 </div>
 
@@ -683,8 +694,22 @@
             // Solo actualiza si hay coincidencia con la partida activa
             // (se delega a loadMatch si se necesita)
         }
+        // Reenviar señal de cambio de slots de redes sociales directamente a Arquitecto
+        if (type === 'SOCIAL_SLOTS_UPDATE') {
+            channel.postMessage({ type: 'SOCIAL_SLOTS_UPDATE', payload });
+        }
         if (type === 'REQUEST_STATE') {
             channel.postMessage({ type: 'TOGGLE_VISIBILITY', payload: { isVisible: state.overlaysVisible } });
+            // Reenviar estado actual de socials para que Arquitecto sincronice slots al recargar
+            channel.postMessage({
+                type: 'SOCIAL_SLOTS_UPDATE',
+                payload: {
+                    players: [
+                        { id: 'p1', socialCount: state.p1.socials.length },
+                        { id: 'p2', socialCount: state.p2.socials.length }
+                    ]
+                }
+            });
         }
     };
 
@@ -702,8 +727,8 @@
         activeMatchId: null,
         activeRound: '',
         requiredScore: null,
-        p1: { flag: 'do', shield: '', social: '', socialHandle: '' },
-        p2: { flag: 'do', shield: '', social: '', socialHandle: '' }
+        p1: { flag: 'do', shield: '', socials: [{ type: '', handle: '' }] },
+        p2: { flag: 'do', shield: '', socials: [{ type: '', handle: '' }] }
     };
 
     let currentOverlayFile = '';
@@ -790,20 +815,27 @@
         updateResUI('shield', 'p1', state.p1.shield);
         updateResUI('shield', 'p2', state.p2.shield);
 
-        // Redes
-        state.p1.social = payload.p1?.socialType || '';
-        state.p2.social = payload.p2?.socialType || '';
-        state.p1.socialHandle = payload.p1?.socialHandle || '';
-        state.p2.socialHandle = payload.p2?.socialHandle || '';
-        updateResUI('social', 'p1', state.p1.social);
-        updateResUI('social', 'p2', state.p2.social);
+        // Redes sociales — leer array, con fallback a formato viejo
+        state.p1.socials = payload.p1?.socials
+            || (payload.p1?.socialType ? [{ type: payload.p1.socialType, handle: payload.p1.socialHandle || '' }] : [{ type: '', handle: '' }]);
+        state.p2.socials = payload.p2?.socials
+            || (payload.p2?.socialType ? [{ type: payload.p2.socialType, handle: payload.p2.socialHandle || '' }] : [{ type: '', handle: '' }]);
 
-        // NO resetear scores aquí — el usuario debe presionar INICIAR PARTIDA para eso
-        // Guardar payload pendiente y mostrar botón INICIAR PARTIDA
-        pendingMatchPayload = payload;
-        showStartMatchButton();
+        // Mostrar solo la red 1 en el botón del controlador (UI compacta)
+        updateResUI('social', 'p1', state.p1.socials[0]?.type || '');
+        updateResUI('social', 'p2', state.p2.socials[0]?.type || '');
 
-        document.getElementById('status-bar').innerText = `Partida lista: #${payload.match_id} · ${payload.round}${state.requiredScore ? ' · FT'+state.requiredScore : ''} — Presiona INICIAR PARTIDA`;
+        if (payload.skipReset) {
+            // Actualización silenciosa: aplicar cambios al overlay sin tocar marcadores
+            // ni mostrar "Iniciar Partida". Enviar directamente al overlay.
+            sendUpdate(true);
+            document.getElementById('status-bar').innerText = `Actualizado: #${payload.match_id} · ${payload.round}${state.requiredScore ? ' · FT'+state.requiredScore : ''}`;
+        } else {
+            // Flujo normal: guardar payload pendiente y mostrar botón INICIAR PARTIDA
+            pendingMatchPayload = payload;
+            showStartMatchButton();
+            document.getElementById('status-bar').innerText = `Partida lista: #${payload.match_id} · ${payload.round}${state.requiredScore ? ' · FT'+state.requiredScore : ''} — Presiona INICIAR PARTIDA`;
+        }
     }
 
     // Chequea si algún jugador alcanzó el FT y activa/desactiva REPORTAR
@@ -1020,7 +1052,11 @@
     }
 
     function selectResource(type, player, value) {
-        state[player][type === 'flag' ? 'flag' : type === 'shield' ? 'shield' : 'social'] = value;
+        if (type === 'social') {
+            state[player].socials[0].type = value;
+        } else {
+            state[player][type === 'flag' ? 'flag' : 'shield'] = value;
+        }
         updateResUI(type, player, value);
         document.getElementById(`menu-${type}-${player}`).style.display = 'none';
         markDirty();
@@ -1039,8 +1075,14 @@
             p2Score: state.p2Score,
             p1Flag: state.p1.flag, p2Flag: state.p2.flag,
             p1Shield: state.p1.shield, p2Shield: state.p2.shield,
-            p1Social: state.p1.social, p2Social: state.p2.social,
-            p1SocialHandle: state.p1.socialHandle, p2SocialHandle: state.p2.socialHandle,
+            // Array completo de redes sociales para Arquitecto
+            p1Socials: state.p1.socials,
+            p2Socials: state.p2.socials,
+            // Campos planos (retrocompatibilidad con overlays viejos)
+            p1Social: state.p1.socials[0]?.type || '',
+            p2Social: state.p2.socials[0]?.type || '',
+            p1SocialHandle: state.p1.socials[0]?.handle || '',
+            p2SocialHandle: state.p2.socials[0]?.handle || '',
             ft: (!formatState.linked && getFormatText()) ? getFormatText() : '',
             format: formatState.type,
             linked: formatState.linked
@@ -1150,17 +1192,16 @@
             document.getElementById('dock-p2-score').innerText = state.p2Score;
 
             // Swap recursos
-            const tmpFlag   = state.p1.flag;   state.p1.flag   = state.p2.flag;   state.p2.flag   = tmpFlag;
-            const tmpShield = state.p1.shield; state.p1.shield = state.p2.shield; state.p2.shield = tmpShield;
-            const tmpSocial = state.p1.social; state.p1.social = state.p2.social; state.p2.social = tmpSocial;
-            const tmpHandle = state.p1.socialHandle; state.p1.socialHandle = state.p2.socialHandle; state.p2.socialHandle = tmpHandle;
+            const tmpFlag   = state.p1.flag;    state.p1.flag   = state.p2.flag;    state.p2.flag   = tmpFlag;
+            const tmpShield = state.p1.shield;  state.p1.shield = state.p2.shield;  state.p2.shield = tmpShield;
+            const tmpSocials = state.p1.socials; state.p1.socials = state.p2.socials; state.p2.socials = tmpSocials;
 
             updateResUI('flag',   'p1', state.p1.flag);
             updateResUI('flag',   'p2', state.p2.flag);
             updateResUI('shield', 'p1', state.p1.shield);
             updateResUI('shield', 'p2', state.p2.shield);
-            updateResUI('social', 'p1', state.p1.social);
-            updateResUI('social', 'p2', state.p2.social);
+            updateResUI('social', 'p1', state.p1.socials[0]?.type || '');
+            updateResUI('social', 'p2', state.p2.socials[0]?.type || '');
         };
 
         if (state.swapAnimEnabled) {
@@ -1209,7 +1250,7 @@
     function getFormatText() {
         if (!formatState.type || !state.requiredScore) return '';
         if (formatState.type === 'FT') return `FT${state.requiredScore}`;
-        return `Best of ${state.requiredScore}`;
+        return `Best of ${(state.requiredScore * 2) - 1}`;
     }
 
     function updateFormatUI() {
@@ -1266,6 +1307,206 @@
     function toggleOverlayPanel() {
         document.getElementById('overlay-panel').classList.toggle('open');
     }
+
+    // ── Color de Fondo ──────────────────────────────────────────
+    // =====================================================
+    //  SISTEMA DE PALETA INTELIGENTE
+    // =====================================================
+
+    /** Convierte hex → { h, s, l } en rangos 0-360, 0-100, 0-100 */
+    function hexToHsl(hex) {
+        let r = parseInt(hex.slice(1,3),16)/255;
+        let g = parseInt(hex.slice(3,5),16)/255;
+        let b = parseInt(hex.slice(5,7),16)/255;
+        const max = Math.max(r,g,b), min = Math.min(r,g,b);
+        let h, s, l = (max+min)/2;
+        if (max === min) { h = s = 0; }
+        else {
+            const d = max - min;
+            s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+            switch(max) {
+                case r: h = ((g-b)/d + (g<b?6:0))/6; break;
+                case g: h = ((b-r)/d + 2)/6; break;
+                case b: h = ((r-g)/d + 4)/6; break;
+            }
+        }
+        return { h: h*360, s: s*100, l: l*100 };
+    }
+
+    /** Convierte { h, s, l } → hex */
+    function hslToHex(h, s, l) {
+        h /= 360; s /= 100; l /= 100;
+        let r, g, b;
+        if (s === 0) { r = g = b = l; }
+        else {
+            const hue2rgb = (p,q,t) => {
+                if (t<0) t+=1; if (t>1) t-=1;
+                if (t<1/6) return p+(q-p)*6*t;
+                if (t<1/2) return q;
+                if (t<2/3) return p+(q-p)*(2/3-t)*6;
+                return p;
+            };
+            const q = l<0.5 ? l*(1+s) : l+s-l*s;
+            const p = 2*l-q;
+            r = hue2rgb(p,q,h+1/3);
+            g = hue2rgb(p,q,h);
+            b = hue2rgb(p,q,h-1/3);
+        }
+        return '#' + [r,g,b].map(x => Math.round(x*255).toString(16).padStart(2,'0')).join('');
+    }
+
+    /**
+     * Genera la paleta completa a partir del color base.
+     * Los offsets de luminosidad replican exactamente la misma
+     * proporción que usé al pasar de #151515 → #13141a manualmente.
+     *
+     *  base          → fondo principal        (L base)
+     *  +5.5L         → panel / superficie     (--panel-bg, #1c1d26)
+     *  +7.5L         → elementos elevados     (#1e1f28, inputs hover, btn hover)
+     *  -3L           → fondo inputs           (#0e0f14)
+     *  -5L           → más oscuro             (#0a0b0f)
+     *  +11L          → bordes / separadores   (#252630)
+     *  +4L           → borders colored (btn borders neutros)
+     */
+    function buildPalette(baseHex) {
+        const { h, s, l } = hexToHsl(baseHex);
+        // Clamp helper
+        const clamp = v => Math.max(0, Math.min(100, v));
+        return {
+            base:       baseHex,
+            panel:      hslToHex(h, s, clamp(l + 5.5)),
+            elevated:   hslToHex(h, s, clamp(l + 7.5)),
+            inputsBg:   hslToHex(h, s, clamp(l - 3)),
+            darker:     hslToHex(h, s, clamp(l - 5)),
+            borders:    hslToHex(h, s, clamp(l + 11)),
+            btnNeutral: hslToHex(h, s, clamp(l + 4)),
+        };
+    }
+
+    /** Aplica la paleta completa al DOM via CSS variables + estilos inline */
+    function applyPalette(p) {
+        const root = document.documentElement;
+        // Variables CSS
+        root.style.setProperty('--bg-dark',   p.base);
+        root.style.setProperty('--panel-bg',  p.panel);
+
+        // body background
+        document.body.style.backgroundColor = p.base;
+
+        // Recorrer todos los elementos y reasignar colores que dependen de la paleta
+        // usando data-attrs internos para identificarlos sin tocar el HTML original
+        _patchInlineStyles(p);
+    }
+
+    /**
+     * Parchea los estilos hardcodeados de los elementos que usan las variaciones.
+     * Funciona buscando por selector y comparando si el color actual es "parecido"
+     * al anterior — en vez de eso, usamos una lista blanca de selectores conocidos.
+     */
+    function _patchInlineStyles(p) {
+        const patches = [
+            // [selector, propiedad CSS, valor de la paleta]
+            ['#overlay-select',                    'background',        p.darker],
+            ['#overlay-select',                    'borderColor',       p.borders],
+            ['.dock-input',                        'background',        p.darker],
+            ['.preset-btn',                        'borderColor',       p.borders],
+            ['.preset-sep',                        'background',        p.borders],
+            ['.res-grid',                          'background',        p.darker],
+            ['.res-option',                        'background',        p.inputsBg],
+            ['.ctrl-btn',                          'background',        p.elevated],
+            ['.ctrl-btn',                          'borderColor',       p.borders],
+            ['.score-display',                     'background',        p.darker],
+            ['.score-display',                     'borderColor',       p.elevated],
+            ['#status-bar',                        'background',        p.darker],
+            ['#status-bar',                        'borderColor',       p.borders],
+            ['.anim-toggle-row',                   'borderBottomColor', p.borders],
+            ['#overlay-panel h3',                  'borderBottomColor', p.borders],
+            ['#bg-color-hex',                      'background',        p.inputsBg],
+            ['#bg-color-hex',                      'borderColor',       p.borders],
+            ['#bg-color-picker',                   'borderColor',       p.borders],
+        ];
+
+        // Aplicar stylesheet dinámica (más limpio que inline por elemento)
+        let style = document.getElementById('_palette_style');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = '_palette_style';
+            document.head.appendChild(style);
+        }
+
+        style.textContent = `
+            :root {
+                --bg-dark: ${p.base};
+                --panel-bg: ${p.panel};
+            }
+            body { background-color: ${p.base} !important; }
+            #overlay-select { background: ${p.darker} !important; border-color: ${p.borders} !important; }
+            .preset-btn { border-color: ${p.borders} !important; }
+            .preset-btn:hover { background: ${p.elevated} !important; }
+            .preset-sep { background: ${p.borders} !important; }
+            .ctrl-btn { background: ${p.elevated} !important; border-color: ${p.borders} !important; }
+            .ctrl-btn:hover { background: ${p.btnNeutral} !important; border-color: ${p.borders} !important; }
+            .score-display { background: ${p.darker} !important; border-color: ${p.elevated} !important; }
+            #status-bar { background: ${p.darker} !important; border-color: ${p.borders} !important; }
+            .anim-toggle-row { border-bottom-color: ${p.borders} !important; }
+            #overlay-panel h3 { border-bottom-color: ${p.borders} !important; }
+            #overlay-panel { background: ${p.base} !important; }
+            #bg-color-hex { background: ${p.inputsBg} !important; border-color: ${p.borders} !important; }
+            #bg-color-picker { border-color: ${p.borders} !important; }
+            .res-grid { background: ${p.panel} !important; }
+            .res-option { background: ${p.inputsBg} !important; }
+            .res-option:hover { background: ${p.elevated} !important; }
+            .dock-input { background: ${p.darker} !important; border-color: ${p.borders} !important; }
+            .preset-btn:not(.fmt-active):not(.link-active):not(.btn-w):not(.btn-l):not(.btn-g) { background: transparent; }
+        `;
+    }
+
+    function applyBgColor(hex) {
+        const p = buildPalette(hex);
+        applyPalette(p);
+        // Sync inputs
+        const hexInput = document.getElementById('bg-color-hex');
+        if (hexInput && hexInput.value.toLowerCase() !== hex.toLowerCase()) hexInput.value = hex;
+        try { localStorage.setItem('fgc_ctrl_bg', hex); } catch(e) {}
+    }
+
+    function onHexInput(val) {
+        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+            applyBgColor(val);
+            const picker = document.getElementById('bg-color-picker');
+            if (picker) picker.value = val;
+        }
+    }
+
+    function commitHex(val) {
+        const clean = val.trim();
+        if (/^#[0-9a-fA-F]{6}$/.test(clean)) {
+            applyBgColor(clean);
+        } else {
+            const saved = localStorage.getItem('fgc_ctrl_bg') || '#13141a';
+            document.getElementById('bg-color-hex').value = saved;
+        }
+    }
+
+    function rgbToHex(rgb) {
+        const m = rgb.match(/\d+/g);
+        if (!m || m.length < 3) return '#13141a';
+        return '#' + m.slice(0,3).map(n => parseInt(n).toString(16).padStart(2,'0')).join('');
+    }
+
+    // Restaurar color guardado al iniciar
+    (function initBgColor() {
+        try {
+            const saved = localStorage.getItem('fgc_ctrl_bg') || '#13141a';
+            if (/^#[0-9a-fA-F]{6}$/.test(saved)) {
+                const picker = document.getElementById('bg-color-picker');
+                const hexInput = document.getElementById('bg-color-hex');
+                if (picker) picker.value = saved;
+                if (hexInput) hexInput.value = saved;
+                applyBgColor(saved);
+            }
+        } catch(e) {}
+    })();
 
     // Cerrar el panel al hacer clic fuera del mismo
     document.addEventListener('click', (e) => {

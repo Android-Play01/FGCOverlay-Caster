@@ -498,8 +498,13 @@
             border-bottom: none;
         }
 
-        .data-table tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
+        .data-table tbody tr td {
+            background: linear-gradient(180deg, rgba(25, 28, 41, 0.95) 0%, rgba(15, 17, 26, 0.95) 100%);
+        }
+
+        .data-table tbody tr:hover td {
+            background: linear-gradient(180deg, rgba(35, 39, 58, 0.98) 0%, rgba(22, 25, 38, 0.98) 100%);
+            box-shadow: inset 0 0 0 1px rgba(255, 176, 0, 0.18);
         }
 
         .player-name-api {
@@ -517,6 +522,86 @@
             width: 100%;
             max-width: 150px;
             margin-left: 10px;
+        }
+
+        /* ============================================================
+           MULTI-SOCIAL SLOTS
+        ============================================================ */
+        .socials-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .social-slot {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            position: relative;
+        }
+
+        .social-slot .social-input {
+            margin-left: 6px;
+        }
+
+        .btn-remove-social {
+            background: none;
+            border: none;
+            color: #334155;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0 4px 0 6px;
+            line-height: 1;
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-remove-social:hover {
+            color: #ff5252;
+        }
+
+        .btn-add-social {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 176, 0, 0.06);
+            border: 1px dashed rgba(255, 176, 0, 0.3);
+            color: #ffb000;
+            font-size: 0.62rem;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: fit-content;
+            margin-top: 2px;
+        }
+
+        .btn-add-social:hover {
+            background: rgba(255, 176, 0, 0.15);
+            border-color: #ffb000;
+            box-shadow: 0 0 8px rgba(255, 176, 0, 0.2);
+        }
+
+        .btn-add-social svg {
+            width: 11px;
+            height: 11px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            fill: none;
+        }
+
+        .social-slot-number {
+            font-size: 0.5rem;
+            font-weight: 900;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            width: 14px;
+            text-align: center;
+            flex-shrink: 0;
         }
 
         /* ============================================================
@@ -561,8 +646,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1169,8 +1254,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -1253,6 +1338,30 @@
             font-weight: 400;
         }
 
+        .settings-social-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .settings-social-slot {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-slot-label {
+            font-size: 0.52rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #334155;
+            width: 14px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
         .btn-apply-all {
             background: rgba(255, 176, 0, 0.1);
             color: #ffb000;
@@ -1274,115 +1383,953 @@
             box-shadow: 0 0 15px rgba(255, 176, 0, 0.3);
         }
 
+        /* Toggle switch — Panel de Combate */
+        .settings-toggle {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .settings-toggle input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-track {
+            width: 38px;
+            height: 22px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 11px;
+            transition: background 0.25s, border-color 0.25s;
+            position: relative;
+        }
+        .toggle-track::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            background: #475569;
+            border-radius: 50%;
+            transition: transform 0.25s, background 0.25s;
+        }
+        .settings-toggle input:checked + .toggle-track {
+            background: rgba(255, 176, 0, 0.2);
+            border-color: #ffb000;
+        }
+        .settings-toggle input:checked + .toggle-track::after {
+            transform: translateX(16px);
+            background: #ffb000;
+            box-shadow: 0 0 6px rgba(255,176,0,0.5);
+        }
+
         /* ============================================================
-       LIGHT MODE (override mínimo para mantener compatibilidad con el JS)
+       LIGHT MODE — Implementación completa
     ============================================================ */
+
+        /* --- Root overrides --- */
         body.light-mode {
             --bg-dark: #f0ede8;
             --panel-bg: #f8f6f2;
-            --text-main: #1a1a1a;
-            --text-muted: #777;
-            --border: #d0cdc8;
+            --text-main: #1e1e1e;
+            --text-muted: #6b7280;
+            --border: #d4d0ca;
             --accent: #0097a7;
             --accent-hover: #00bcd4;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --warning: #d97706;
             background-color: #f0ede8;
-            color: #1a1a1a;
+            color: #1e1e1e;
         }
 
+        /* --- Background & Scanlines --- */
         body.light-mode .arcade-bg {
-            opacity: 0.2;
+            background-image:
+                linear-gradient(rgba(240, 237, 232, 0.97), rgba(240, 237, 232, 0.97)),
+                linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
         }
 
+        /* --- Header --- */
         body.light-mode header {
-            background: rgba(240, 237, 232, 0.95);
-            border-bottom-color: #d0cdc8;
+            background: rgba(248, 246, 242, 0.95);
+            border-bottom-color: #d4d0ca;
+            backdrop-filter: blur(12px);
         }
 
-        body.light-mode .tabs {
-            background: rgba(240, 237, 232, 0.9);
-            border-bottom-color: #d0cdc8;
-        }
-
-        body.light-mode .tab-content {
-            background: #f0ede8;
-        }
-
-        body.light-mode .data-table {
+        body.light-mode .brand-icon {
             background: #fff;
-            border-color: #dddad5;
+            border-color: #d97706;
         }
 
-        body.light-mode .data-table th {
-            background: #eae7e2;
-            color: #666;
+        body.light-mode .brand-text h1 {
+            color: #1e1e1e;
         }
 
-        body.light-mode .data-table td {
-            color: #333;
+        body.light-mode .brand-text p {
+            color: #6b7280;
         }
 
+        body.light-mode #sync-indicator {
+            border-color: #d4d0ca;
+            color: #6b7280;
+        }
+
+        body.light-mode #sync-indicator.live {
+            border-color: #16a34a;
+            color: #16a34a;
+            background: rgba(22, 163, 74, 0.08);
+        }
+
+        body.light-mode #sync-indicator.error {
+            border-color: #dc2626;
+            color: #dc2626;
+            background: rgba(220, 38, 38, 0.06);
+        }
+
+        /* --- Header Buttons --- */
+        body.light-mode .btn-action {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: #d4d0ca;
+            color: #374151;
+        }
+
+        body.light-mode .btn-action:hover {
+            background: rgba(217, 119, 6, 0.12);
+            border-color: #d97706;
+            color: #d97706;
+        }
+
+        body.light-mode .btn-connected {
+            background: rgba(22, 163, 74, 0.08);
+            color: #16a34a;
+            border-color: rgba(22, 163, 74, 0.35);
+        }
+
+        body.light-mode .btn-connected:hover {
+            background: rgba(220, 38, 38, 0.08);
+            color: #dc2626;
+            border-color: rgba(220, 38, 38, 0.4);
+        }
+
+        body.light-mode #btn-theme,
+        body.light-mode #btn-settings {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: #d4d0ca;
+            color: #6b7280;
+        }
+
+        body.light-mode #btn-theme:hover,
+        body.light-mode #btn-settings:hover {
+            border-color: #d97706;
+            color: #d97706;
+            background: rgba(217, 119, 6, 0.08);
+        }
+
+        /* --- Input fields --- */
         body.light-mode input[type="password"],
         body.light-mode input[type="text"] {
             background: #fff;
-            color: #1a1a1a;
-            border-color: #ccc;
+            color: #1e1e1e;
+            border-color: #d4d0ca;
+        }
+
+        body.light-mode input[type="password"]:focus,
+        body.light-mode input[type="text"]:focus {
+            border-color: #d97706;
+            box-shadow: 0 0 8px rgba(217, 119, 6, 0.15);
+            background: #fff;
         }
 
         body.light-mode input::placeholder {
             color: #aaa;
         }
 
+        body.light-mode .input-group label {
+            color: #6b7280;
+        }
+
+        /* --- Tabs --- */
+        body.light-mode .tabs {
+            background: rgba(248, 246, 242, 0.95);
+            border-bottom-color: #d4d0ca;
+        }
+
+        body.light-mode .tab-btn {
+            color: #9ca3af;
+        }
+
+        body.light-mode .tab-btn:hover {
+            color: #374151;
+        }
+
+        body.light-mode .tab-btn.active {
+            color: #d97706;
+            border-bottom-color: #d97706;
+            text-shadow: none;
+        }
+
+        /* --- Tab Content --- */
+        body.light-mode .tab-content {
+            background: #f0ede8;
+        }
+
+        /* --- Data Table --- */
+        body.light-mode .data-table {
+            background: #fff;
+            border-color: #d4d0ca;
+        }
+
+        body.light-mode .data-table th {
+            background: #f3f1ec;
+            color: #6b7280;
+            border-bottom-color: #d4d0ca;
+        }
+
+        body.light-mode .data-table td {
+            color: #374151;
+        }
+
+        body.light-mode .data-table tbody tr td {
+            background: #fff;
+            border-bottom-color: #eae7e2;
+        }
+
+        body.light-mode .data-table tbody tr:hover td {
+            background: #faf8f5;
+            box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.2);
+        }
+
+        body.light-mode .player-name-api {
+            color: #9ca3af;
+        }
+
+        /* --- Resource Buttons --- */
         body.light-mode .resource-btn {
             background: #fff;
-            border-color: #ccc;
+            border-color: #d4d0ca;
         }
 
-        body.light-mode .match-card {
-            background: #fff;
-            border-color: #e0ddd8;
+        body.light-mode .resource-btn:hover {
+            border-color: #d97706;
+            background: rgba(217, 119, 6, 0.06);
         }
 
-        body.light-mode .match-player-name {
-            color: #555;
+        body.light-mode .picker-item-none {
+            color: #9ca3af;
         }
 
-        body.light-mode .match-score {
-            background: #eae7e2;
-            color: #888;
-            border-color: #ddd;
+        /* --- Social Slots --- */
+        body.light-mode .social-slot-number {
+            color: #9ca3af;
+        }
+
+        body.light-mode .btn-remove-social {
+            color: #9ca3af;
+        }
+
+        body.light-mode .btn-remove-social:hover {
+            color: #dc2626;
+        }
+
+        body.light-mode .btn-add-social {
+            background: rgba(217, 119, 6, 0.06);
+            border-color: rgba(217, 119, 6, 0.3);
+            color: #d97706;
+        }
+
+        body.light-mode .btn-add-social:hover {
+            background: rgba(217, 119, 6, 0.14);
+            border-color: #d97706;
+        }
+
+        /* --- Picker Modal --- */
+        body.light-mode #picker-overlay {
+            background: rgba(0, 0, 0, 0.25);
         }
 
         body.light-mode .picker-panel {
-            background: #f5f3ef;
-            border-color: #d0cdc8;
+            background: #f8f6f2;
+            border-color: #d4d0ca;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        body.light-mode .picker-header {
+            border-bottom-color: #d4d0ca;
+        }
+
+        body.light-mode .picker-title {
+            color: #d97706;
+            text-shadow: none;
+        }
+
+        body.light-mode .picker-search {
+            background: #fff;
+            border-color: #d4d0ca;
+            color: #1e1e1e;
+        }
+
+        body.light-mode .picker-search:focus {
+            border-color: #d97706;
+            box-shadow: 0 0 6px rgba(217, 119, 6, 0.12);
+            background: #fff;
+        }
+
+        body.light-mode .btn-close {
+            color: #9ca3af;
+        }
+
+        body.light-mode .btn-close:hover {
+            color: #374151;
         }
 
         body.light-mode .picker-item {
             background: #fff;
-            border-color: #ddd;
+            border-color: #e5e2dd;
+        }
+
+        body.light-mode .picker-item:hover {
+            border-color: #d97706;
+            background: rgba(217, 119, 6, 0.06);
+            box-shadow: 0 0 8px rgba(217, 119, 6, 0.15);
+        }
+
+        body.light-mode .picker-item-label {
+            color: #6b7280;
+        }
+
+        /* --- Bracket Section --- */
+        body.light-mode .bracket-title.winners { color: #0891b2; }
+        body.light-mode .bracket-title.losers  { color: #d97706; }
+        body.light-mode .bracket-title.grands   { color: #9333ea; }
+        body.light-mode .bracket-title.single   { color: #16a34a; }
+        body.light-mode .bracket-title.roundrobin { color: #9333ea; }
+        body.light-mode .bracket-title.lobby    { color: #db2777; }
+
+        body.light-mode .round-header {
+            border-bottom-color: #e5e2dd;
+        }
+
+        body.light-mode .round-name {
+            color: #374151;
+            text-shadow: none;
+        }
+
+        body.light-mode .round-ft {
+            color: #9ca3af;
+        }
+
+        body.light-mode .editable-round-name {
+            color: #374151;
+            text-shadow: none;
+        }
+
+        body.light-mode .editable-round-input {
+            background: rgba(0, 0, 0, 0.04);
+            color: #374151;
+        }
+
+        body.light-mode .bracket-hint {
+            background: rgba(217, 119, 6, 0.06);
+            border-color: rgba(217, 119, 6, 0.2);
+            color: #6b7280;
+        }
+
+        /* --- Match Card --- */
+        body.light-mode .match-card {
+            background: #fff;
+            border-color: #e5e2dd;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-mode .match-card:hover:not(.finished) {
+            border-color: rgba(217, 119, 6, 0.5);
+            box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .match-card.active-match {
+            border-color: #d97706;
+            box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.25), 0 0 16px rgba(217, 119, 6, 0.1);
+        }
+
+        body.light-mode .match-card.finished {
+            opacity: 0.5;
+        }
+
+        body.light-mode .match-card.finished:hover {
+            border-color: #e5e2dd;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        body.light-mode .match-player {
+            border-bottom-color: #eae7e2;
+        }
+
+        body.light-mode .match-player.winner {
+            background: linear-gradient(90deg, rgba(217, 119, 6, 0.1) 0%, transparent 100%);
+        }
+
+        body.light-mode .match-player.winner .match-player-name {
+            color: #1e1e1e;
+        }
+
+        body.light-mode .match-player.winner .match-score {
+            background: #d97706;
+            color: #fff;
+            border-color: #d97706;
+            box-shadow: 0 0 6px rgba(217, 119, 6, 0.3);
+        }
+
+        body.light-mode .match-player-name {
+            color: #4b5563;
+            text-shadow: none;
+        }
+
+        body.light-mode .match-player-name.tbd {
+            color: #d4d0ca;
+        }
+
+        body.light-mode .match-score {
+            background: #f3f1ec;
+            color: #9ca3af;
+            border-color: #e5e2dd;
+        }
+
+        body.light-mode .match-flag-small {
+            border-color: #d4d0ca;
+        }
+
+        body.light-mode .match-id-badge {
+            color: #d4d0ca;
+        }
+
+        /* --- SVG Connectors --- */
+        body.light-mode .round-connector line,
+        body.light-mode .round-connector path {
+            stroke: #d4d0ca;
+        }
+
+        /* --- Match Drawer --- */
+        body.light-mode #match-drawer {
+            background: rgba(248, 246, 242, 0.99);
+            border-left-color: #d97706;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode #drawer-toggle-btn {
+            background: rgba(248, 246, 242, 0.99);
+            border-color: #d97706;
+            color: #d97706;
+            box-shadow: -3px 0 8px rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-mode #drawer-toggle-btn:hover {
+            background: rgba(217, 119, 6, 0.1);
+        }
+
+        body.light-mode .drawer-header {
+            border-bottom-color: #e5e2dd;
+        }
+
+        body.light-mode .drawer-title {
+            color: #d97706;
+        }
+
+        body.light-mode .drawer-subtitle {
+            color: #6b7280;
+        }
+
+        body.light-mode .drawer-player-card {
+            background: #fff;
+            border-color: #e5e2dd;
+        }
+
+        body.light-mode .drawer-player-label {
+            color: #6b7280;
+            border-bottom-color: #eae7e2;
+        }
+
+        body.light-mode .drawer-field label {
+            color: #6b7280;
+        }
+
+        body.light-mode .drawer-field input[type="text"] {
+            background: #f8f6f2;
+            border-color: #d4d0ca;
+            color: #1e1e1e;
+        }
+
+        body.light-mode .drawer-field input[type="text"]:focus {
+            border-color: #d97706;
+            background: #fff;
+        }
+
+        body.light-mode .drawer-social-handle {
+            background: #fff !important;
+            border-color: #d4d0ca !important;
+            color: #1e1e1e !important;
+        }
+
+        body.light-mode .drawer-empty-state {
+            color: #9ca3af;
+        }
+
+        body.light-mode .drawer-footer {
+            border-top-color: #e5e2dd;
+        }
+
+        body.light-mode #btn-drawer-update {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: #d4d0ca;
+            color: #9ca3af;
+        }
+
+        body.light-mode #btn-drawer-update.pending {
+            background: #d97706;
+            color: #fff;
+            border-color: #b45309;
+        }
+
+        body.light-mode #btn-drawer-update.pending:hover {
+            background: #b45309;
+            color: #fff;
+            border-color: #92400e;
+        }
+
+        body.light-mode #btn-drawer-update.sent {
+            background: rgba(22, 163, 74, 0.1);
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+
+        body.light-mode #btn-cancel-match {
+            background: rgba(220, 38, 38, 0.05);
+            border-color: rgba(220, 38, 38, 0.25);
+            color: #dc2626;
+        }
+
+        body.light-mode #btn-cancel-match:hover {
+            background: rgba(220, 38, 38, 0.12);
+            border-color: #dc2626;
+            box-shadow: 0 0 8px rgba(220, 38, 38, 0.15);
+        }
+
+        /* --- Settings Modal --- */
+        body.light-mode #settings-overlay {
+            background: rgba(0, 0, 0, 0.2);
         }
 
         body.light-mode #settings-modal {
-            background: #f5f3ef;
-            border-color: #d0cdc8;
+            background: #f8f6f2;
+            border-color: #d4d0ca;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        body.light-mode .settings-title {
+            color: #d97706;
+            text-shadow: none;
+        }
+
+        body.light-mode .settings-close {
+            color: #9ca3af;
+        }
+
+        body.light-mode .settings-close:hover {
+            color: #374151;
         }
 
         body.light-mode .settings-row {
             background: #fff;
-            border-color: #ddd;
+            border-color: #e5e2dd;
         }
 
-        body.light-mode .round-header {
-            border-bottom-color: #e0ddd8;
+        body.light-mode .settings-row-label {
+            color: #6b7280;
         }
 
-        body.light-mode .round-name {
-            color: #444;
+        body.light-mode .settings-value {
+            color: #374151;
         }
 
-        body.light-mode .round-ft {
-            color: #999;
+        body.light-mode .settings-value.empty {
+            color: #9ca3af;
         }
+
+        body.light-mode .settings-slot-label {
+            color: #9ca3af;
+        }
+
+        body.light-mode .btn-apply-all {
+            background: rgba(217, 119, 6, 0.08);
+            color: #d97706;
+            border-color: rgba(217, 119, 6, 0.3);
+        }
+
+        body.light-mode .btn-apply-all:hover {
+            background: #d97706;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(217, 119, 6, 0.2);
+        }
+
+        /* Toggle switch light mode */
+        body.light-mode .toggle-track {
+            background: rgba(0, 0, 0, 0.06);
+            border-color: #d4d0ca;
+        }
+
+        body.light-mode .toggle-track::after {
+            background: #9ca3af;
+        }
+
+        body.light-mode .settings-toggle input:checked + .toggle-track {
+            background: rgba(217, 119, 6, 0.15);
+            border-color: #d97706;
+        }
+
+        body.light-mode .settings-toggle input:checked + .toggle-track::after {
+            background: #d97706;
+            box-shadow: 0 0 4px rgba(217, 119, 6, 0.4);
+        }
+
+        /* --- Toast --- */
+        body.light-mode #toast {
+            background: #fff;
+            border-color: #d4d0ca;
+            color: #374151;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        body.light-mode #toast.success {
+            border-color: #16a34a;
+            color: #16a34a;
+            box-shadow: 0 4px 16px rgba(22, 163, 74, 0.12);
+        }
+
+        body.light-mode #toast.error {
+            border-color: #dc2626;
+            color: #dc2626;
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.12);
+        }
+
+        body.light-mode #toast.info {
+            border-color: #0891b2;
+            color: #0891b2;
+            box-shadow: 0 4px 16px rgba(8, 145, 178, 0.1);
+        }
+
+        /* --- Player Highlight --- */
+        body.light-mode .active-player-row {
+            background: linear-gradient(90deg, rgba(217, 119, 6, 0.1) 0%, transparent 100%) !important;
+            border-left-color: #d97706;
+        }
+
+        /* --- Scrollbar --- */
+        body.light-mode ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        body.light-mode ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        /* ============================================================
+       PLAYER HIGHLIGHT
+    ============================================================ */
+        .active-player-row {
+            background: linear-gradient(90deg, rgba(255, 176, 0, 0.1) 0%, transparent 100%) !important;
+            border-left: 3px solid #ffb000;
+        }
+
+        /* ============================================================
+       MATCH DRAWER
+    ============================================================ */
+        #match-drawer {
+            position: fixed;
+            top: 64px; /* Default under header */
+            right: 0;
+            bottom: 0;
+            width: 320px;
+            background: rgba(15, 17, 26, 0.98);
+            border-left: 2px solid #ffb000;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.8);
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #match-drawer.open {
+            transform: translateX(0);
+        }
+
+        #drawer-toggle-btn {
+            position: absolute;
+            left: -32px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 96px;
+            background: rgba(15, 17, 26, 0.98);
+            border: 2px solid #ffb000;
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            color: #ffb000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: -4px 0 10px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+            z-index: 101;
+            /* Oculto a menos que haya un match activo */
+            display: none; 
+        }
+
+        #drawer-toggle-btn:hover {
+            background: rgba(255, 176, 0, 0.15);
+        }
+
+        #drawer-toggle-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            transition: transform 0.3s;
+            /* Closed: polyline points right → flip to point LEFT (outward, invite to open) */
+            transform: scaleX(-1);
+        }
+
+        #match-drawer.open #drawer-toggle-btn svg {
+            /* Open: point RIGHT (inward, invite to close) */
+            transform: scaleX(1);
+        }
+
+        .drawer-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .drawer-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        #btn-drawer-update.pending {
+            background: var(--warning);
+            color: #000;
+            border-color: #ffb74d;
+            cursor: pointer;
+            animation: drawer-pulse 1.2s infinite, drawer-pulse-glow 1.2s infinite;
+        }
+
+        @keyframes drawer-pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(255, 176, 0, 0.8); }
+            60%  { box-shadow: 0 0 0 8px rgba(255, 176, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 176, 0, 0); }
+        }
+
+        @keyframes drawer-pulse-glow {
+            0%   { background: #ff9800; color: #000; }
+            50%  { background: #ffe082; color: #000; }
+            100% { background: #ff9800; color: #000; }
+        }
+
+        #btn-drawer-update {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #334155;
+            font-size: 0.58rem;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 5px 10px;
+            cursor: default;
+            transition: background 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+        #btn-drawer-update.pending {
+            pointer-events: all;
+            cursor: pointer;
+        }
+        #btn-drawer-update.pending:hover {
+            background: #ffe082;
+            color: #000;
+            border-color: #ffb74d;
+            box-shadow: 0 0 12px rgba(255, 176, 0, 0.4);
+        }
+        #btn-drawer-update:active { transform: scale(0.96); }
+        #btn-drawer-update.sent {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: #22c55e;
+            color: #22c55e;
+            cursor: default;
+            pointer-events: none;
+            animation: none;
+        }
+
+        .drawer-title {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #ffb000;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 4px;
+        }
+        
+        .drawer-subtitle {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+        }
+
+        .drawer-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .drawer-player-card {
+            background: rgba(25, 28, 41, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px;
+        }
+
+        .drawer-player-label {
+            font-size: 0.55rem;
+            font-weight: 900;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 6px;
+        }
+
+        .drawer-field {
+            margin-bottom: 12px;
+        }
+
+        .drawer-field label {
+            display: block;
+            font-size: 0.5rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            margin-bottom: 4px;
+        }
+
+        .drawer-field input[type="text"] {
+            width: 100%;
+            background: rgba(15, 17, 26, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 8px 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            transition: border-color 0.2s;
+        }
+
+        .drawer-field input[type="text"]:focus {
+            border-color: #ffb000;
+            outline: none;
+        }
+
+        .drawer-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .drawer-col {
+            flex: 1;
+        }
+
+        .drawer-resources {
+            display: flex;
+            gap: 8px;
+        }
+
+        .drawer-resources .resource-btn {
+            flex: 1;
+            height: 40px;
+        }
+
+        .drawer-social-slot {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .drawer-social-slot .resource-btn {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            padding: 4px;
+        }
+
+        .drawer-social-slot input {
+            flex: 1;
+        }
+
+        .drawer-empty-state {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-align: center;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .drawer-footer {
+            padding: 14px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        #btn-cancel-match {
+            width: 100%;
+            background: rgba(255, 82, 82, 0.06);
+            border: 1px solid rgba(255, 82, 82, 0.25);
+            color: #ff5252;
+            font-size: 0.62rem;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #btn-cancel-match:hover {
+            background: rgba(255, 82, 82, 0.18);
+            border-color: #ff5252;
+            box-shadow: 0 0 12px rgba(255, 82, 82, 0.2);
+        }
+        #btn-cancel-match:active { transform: scale(0.98); }
     </style>
 </head>
 
@@ -1457,7 +2404,7 @@
                         <th>Alias (Editable)</th>
                         <th style="text-align:center;">Bandera</th>
                         <th style="text-align:center;">Escudo</th>
-                        <th>Red Social</th>
+                        <th>Redes Sociales <span style="color:#334155;font-weight:400;font-size:0.55rem;">(máx. 3)</span></th>
                     </tr>
                 </thead>
                 <tbody id="players-tbody">
@@ -1520,17 +2467,55 @@
                 <button class="btn-apply-all" onclick="applyDefaultToAll('shield')">Aplicar a todos</button>
             </div>
 
-            <!-- RED SOCIAL -->
+            <!-- RED SOCIAL — 3 slots -->
+            <div class="settings-row" style="align-items: flex-start;">
+                <span class="settings-row-label" style="padding-top:6px;">Redes</span>
+                <div class="settings-social-group">
+                    <!-- Slot 1 -->
+                    <div class="settings-social-slot">
+                        <span class="settings-slot-label">1</span>
+                        <button class="resource-btn" id="default-social-btn-1" onclick="openDefaultPicker('social', 1)"
+                            style="width:56px;height:36px;flex-shrink:0;">
+                            <img id="default-social-img-1" src=""
+                                style="max-width:100%;max-height:100%;object-fit:contain;display:none;">
+                            <span id="default-social-ph-1" style="font-size:0.65rem;color:var(--text-muted);">+ RED</span>
+                        </button>
+                        <span id="default-social-label-1" class="settings-value empty">Ninguna</span>
+                    </div>
+                    <!-- Slot 2 -->
+                    <div class="settings-social-slot">
+                        <span class="settings-slot-label">2</span>
+                        <button class="resource-btn" id="default-social-btn-2" onclick="openDefaultPicker('social', 2)"
+                            style="width:56px;height:36px;flex-shrink:0;">
+                            <img id="default-social-img-2" src=""
+                                style="max-width:100%;max-height:100%;object-fit:contain;display:none;">
+                            <span id="default-social-ph-2" style="font-size:0.65rem;color:var(--text-muted);">+ RED</span>
+                        </button>
+                        <span id="default-social-label-2" class="settings-value empty">Ninguna</span>
+                    </div>
+                    <!-- Slot 3 -->
+                    <div class="settings-social-slot">
+                        <span class="settings-slot-label">3</span>
+                        <button class="resource-btn" id="default-social-btn-3" onclick="openDefaultPicker('social', 3)"
+                            style="width:56px;height:36px;flex-shrink:0;">
+                            <img id="default-social-img-3" src=""
+                                style="max-width:100%;max-height:100%;object-fit:contain;display:none;">
+                            <span id="default-social-ph-3" style="font-size:0.65rem;color:var(--text-muted);">+ RED</span>
+                        </button>
+                        <span id="default-social-label-3" class="settings-value empty">Ninguna</span>
+                    </div>
+                </div>
+                <button class="btn-apply-all" onclick="applyDefaultToAll('social')" style="align-self:center;">Aplicar a todos</button>
+            </div>
+
+            <!-- PANEL DE COMBATE -->
             <div class="settings-row">
-                <span class="settings-row-label">Red Social</span>
-                <button class="resource-btn" id="default-social-btn" onclick="openDefaultPicker('social')"
-                    style="width:56px;height:36px;flex-shrink:0;">
-                    <img id="default-social-img" src=""
-                        style="max-width:100%;max-height:100%;object-fit:contain;display:none;">
-                    <span id="default-social-ph" style="font-size:0.65rem;color:var(--text-muted);">+ RED</span>
-                </button>
-                <span id="default-social-label" class="settings-value empty">Ninguna</span>
-                <button class="btn-apply-all" onclick="applyDefaultToAll('social')">Aplicar a todos</button>
+                <span class="settings-row-label">Panel de<br>Combate</span>
+                <label class="settings-toggle">
+                    <input type="checkbox" id="toggle-auto-drawer" onchange="toggleAutoDrawer(this.checked)">
+                    <span class="toggle-track"></span>
+                </label>
+                <span class="settings-value" id="auto-drawer-label" style="font-size:0.72rem;">Apertura automática al seleccionar partida</span>
             </div>
         </div>
     </div>
@@ -1548,6 +2533,26 @@
         </div>
     </div>
 
+    <!-- MATCH DRAWER -->
+    <div id="match-drawer">
+        <div id="drawer-toggle-btn" onclick="toggleMatchDrawer()" title="Cerrar/Abrir panel de combate">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </div>
+        <div class="drawer-header">
+            <div class="drawer-header-left">
+                <div class="drawer-title" id="drawer-title">Combate Activo</div>
+                <div class="drawer-subtitle" id="drawer-subtitle">Ronda</div>
+            </div>
+            <button id="btn-drawer-update" onclick="drawerSendUpdate()" title="Actualizar controlador sin resetear marcadores">↑ Actualizar</button>
+        </div>
+        <div class="drawer-content" id="drawer-content">
+            <div class="drawer-empty-state">Selecciona un combate en el Bracket para editar a los jugadores aquí.</div>
+        </div>
+        <div class="drawer-footer">
+            <button id="btn-cancel-match" onclick="cancelMatch()" title="Cancelar partida activa (Escape)">✕ Cancelar Partida</button>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast"></div>
 
@@ -1559,8 +2564,10 @@
         let tournamentStages = [];
         let currentPicker = { active: false, playerIndex: null, type: null };
         let activeMatchId = null;
+        let activeMatchState = null; // { match, roundName, requiredScore, format }
         let pollingInterval = null;
         let lastMatchSnapshot = {};
+        let drawerDirty = false; // tracks unsent changes in the drawer
 
         // Custom round names (Lobby & Round Robin): key = roundId (or index), value = custom string
         let customRoundNames = {};
@@ -1686,7 +2693,7 @@
                     const state = JSON.parse(saved);
                     document.getElementById('api-token').value = state.token;
                     document.getElementById('tournament-id').value = state.tourneyId;
-                    playersData = state.players || [];
+                    playersData = (state.players || []).map(p => migrateSocials(p));
                     tournamentStages = state.stages || [];
                     customRoundNames = state.customRoundNames || state.lobbyRoundNames || {};
 
@@ -1862,6 +2869,11 @@
                 showToast('No hay partida activa seleccionada en el bracket', 'error');
                 return;
             }
+            // Si la partida fue cancelada en Panel, ignorar el reporte del controlador
+            if (!activeMatchId || activeMatchId !== payload.match_id) {
+                showToast('Partida cancelada en Panel — resultado ignorado', 'error');
+                return;
+            }
 
             try {
                 showToast('Reportando resultado a Round.One...', 'info');
@@ -1886,6 +2898,13 @@
                 }
 
                 showToast('✅ Resultado reportado correctamente', 'success');
+                // Close the drawer since the match is now finished
+                activeMatchId = null;
+                activeMatchState = null;
+                document.querySelectorAll('.match-card.active-match').forEach(c => c.classList.remove('active-match'));
+                renderTable();   // quitar highlight dorado de participantes inmediatamente
+                renderBracket(); // quitar highlight de match card inmediatamente
+                closeDrawer();
                 setTimeout(pollTournament, 1500);
 
             } catch (e) {
@@ -1900,14 +2919,25 @@
         function processPlayers(apiPlayers) {
             const newPlayers = apiPlayers.map(p => {
                 const existing = playersData.find(ep => ep.id === p.id);
-                if (existing) return existing;
+                if (existing) return migrateSocials(existing);
                 return {
                     id: p.id, apiName: p.name, alias: p.name,
-                    flag: 'do', shield: '', socialType: '', socialHandle: ''
+                    flag: 'do', shield: '',
+                    socials: [{ type: '', handle: '' }]
                 };
             });
             playersData = newPlayers;
             renderTable();
+        }
+
+        // Migrar formato viejo (socialType/socialHandle) al nuevo array socials
+        function migrateSocials(p) {
+            if (!p.socials) {
+                p.socials = [{ type: p.socialType || '', handle: p.socialHandle || '' }];
+                delete p.socialType;
+                delete p.socialHandle;
+            }
+            return p;
         }
 
         function renderTable() {
@@ -1919,15 +2949,42 @@
                 return;
             }
 
+            // Find active players to highlight them
+            let ap1 = null, ap2 = null;
+            if (activeMatchId && lastMatchSnapshot[activeMatchId] !== undefined) {
+                // We need the tournament_playerX_id from the original matcher
+                // But it's easier to find the match in tournamentStages
+                for (const stage of (tournamentStages || [])) {
+                    for (const pool of (stage.pools || [])) {
+                        for (const round of (pool.rounds || [])) {
+                            for (const match of (round.matches || [])) {
+                                if (match.id === activeMatchId) {
+                                    ap1 = match.tournament_player1_id;
+                                    ap2 = match.tournament_player2_id;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             playersData.forEach((p, idx) => {
+                // Migrar al vuelo si viene del formato viejo
+                migrateSocials(p);
+
                 const tr = document.createElement('tr');
+                if (p.id === ap1 || p.id === ap2) {
+                    tr.className = 'active-player-row';
+                }
+
                 const flagImg = `<img src="./banderas/${p.flag}.png" class="resource-img" onerror="this.style.display='none'">`;
                 const shieldImg = p.shield
                     ? `<img src="./escudos/${p.shield}" class="resource-img" onerror="this.style.display='none'">`
                     : `<span class="picker-item-none">+</span>`;
-                const socialImg = p.socialType
-                    ? `<img src="./redes/${p.socialType}" class="resource-img" onerror="this.style.display='none'">`
-                    : `<span class="picker-item-none">+</span>`;
+
+                // Construir celda de redes sociales
+                const socialsCell = buildSocialsCell(idx, p.socials);
 
                 tr.innerHTML = `
                 <td style="color: var(--text-muted); font-size: 0.8rem;">${idx + 1}</td>
@@ -1935,53 +2992,173 @@
                 <td><input type="text" class="alias-input" value="${p.alias}" oninput="updateAlias(${idx}, this.value)" onkeydown="if(event.key==='Enter'){renderBracket();this.blur();}"></td>
                 <td align="center"><button class="resource-btn" onclick="openPicker('flag', ${idx})">${flagImg}</button></td>
                 <td align="center"><button class="resource-btn" onclick="openPicker('shield', ${idx})">${shieldImg}</button></td>
-                <td>
-                    <div style="display:flex; align-items:center;">
-                        <button class="resource-btn" onclick="openPicker('social', ${idx})">${socialImg}</button>
-                        <input type="text" class="social-input" placeholder="@usuario" value="${p.socialHandle}" oninput="updateData(${idx}, 'socialHandle', this.value)">
-                    </div>
-                </td>
+                <td></td>
             `;
+                // Insertar la celda de socials con elementos reales (no innerHTML para poder bindear eventos)
+                tr.lastElementChild.appendChild(socialsCell);
                 tbody.appendChild(tr);
             });
+        }
+
+        function buildSocialsCell(playerIdx, socials) {
+            const container = document.createElement('div');
+            container.className = 'socials-container';
+
+            socials.forEach((s, slotIdx) => {
+                const slot = document.createElement('div');
+                slot.className = 'social-slot';
+
+                // Número de slot (sutil)
+                const numLabel = document.createElement('span');
+                numLabel.className = 'social-slot-number';
+                numLabel.textContent = slotIdx + 1;
+                slot.appendChild(numLabel);
+
+                // Botón ícono de red
+                const socialImg = s.type
+                    ? `<img src="./redes/${s.type}" class="resource-img" onerror="this.style.display='none'">`
+                    : `<span class="picker-item-none">+</span>`;
+                const iconBtn = document.createElement('button');
+                iconBtn.className = 'resource-btn';
+                iconBtn.innerHTML = socialImg;
+                iconBtn.onclick = () => openPicker('social', playerIdx, slotIdx);
+                slot.appendChild(iconBtn);
+
+                // Input handle
+                const handleInput = document.createElement('input');
+                handleInput.type = 'text';
+                handleInput.className = 'social-input';
+                handleInput.placeholder = '@usuario';
+                handleInput.value = s.handle || '';
+                handleInput.oninput = (e) => updateSocialHandle(playerIdx, slotIdx, e.target.value);
+                slot.appendChild(handleInput);
+
+                // Botón quitar (solo si hay más de 1 slot)
+                if (socials.length > 1) {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'btn-remove-social';
+                    removeBtn.title = 'Quitar esta red';
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.onclick = () => removeSocialSlot(playerIdx, slotIdx);
+                    slot.appendChild(removeBtn);
+                }
+
+                container.appendChild(slot);
+            });
+
+            // Botón + (si hay menos de 3 slots)
+            if (socials.length < 3) {
+                const addBtn = document.createElement('button');
+                addBtn.className = 'btn-add-social';
+                addBtn.innerHTML = `<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Red`;
+                addBtn.onclick = () => addSocialSlot(playerIdx);
+                container.appendChild(addBtn);
+            }
+
+            return container;
+        }
+
+        // =====================================================
+        //  HELPER — refresh drawer if playerIdx is in active match
+        // =====================================================
+        function refreshDrawerIfActive(playerIdx) {
+            if (!activeMatchId) return;
+            for (const stage of (tournamentStages || [])) {
+                for (const pool of (stage.pools || [])) {
+                    for (const round of (pool.rounds || [])) {
+                        for (const match of (round.matches || [])) {
+                            if (match.id === activeMatchId) {
+                                const isP1 = playersData.findIndex(p => p.id === match.tournament_player1_id) === playerIdx;
+                                const isP2 = playersData.findIndex(p => p.id === match.tournament_player2_id) === playerIdx;
+                                if (isP1 || isP2) {
+                                    const dp1 = playersData.find(p => p.id === match.tournament_player1_id);
+                                    const dp2 = playersData.find(p => p.id === match.tournament_player2_id);
+                                    populateMatchDrawer(match, dp1, dp2, document.getElementById('drawer-subtitle').innerText);
+                                    markDrawerDirty();
+                                }
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         function updateAlias(idx, val) {
             playersData[idx].alias = val;
             saveData();
             renderBracket();
-            fgcChannel.postMessage({
-                type: 'PLAYERS_UPDATE',
-                payload: {
-                    players: playersData.map(p => ({
-                        id: p.id, alias: p.alias, flag: p.flag,
-                        shield: p.shield, socialType: p.socialType, socialHandle: p.socialHandle
-                    }))
-                }
-            });
+            broadcastPlayersUpdate();
+            refreshDrawerIfActive(idx);
         }
 
         function updateData(idx, field, val) {
             playersData[idx][field] = val;
             saveData();
-            if (field === 'socialHandle') {
-                fgcChannel.postMessage({
-                    type: 'PLAYERS_UPDATE',
-                    payload: {
-                        players: playersData.map(p => ({
-                            id: p.id, alias: p.alias, flag: p.flag,
-                            shield: p.shield, socialType: p.socialType, socialHandle: p.socialHandle
-                        }))
-                    }
-                });
-            }
+        }
+
+        function updateSocialHandle(playerIdx, slotIdx, val) {
+            playersData[playerIdx].socials[slotIdx].handle = val;
+            saveData();
+            broadcastPlayersUpdate();
+            refreshDrawerIfActive(playerIdx);
+        }
+
+        function addSocialSlot(playerIdx) {
+            const p = playersData[playerIdx];
+            if (p.socials.length >= 3) return;
+            const newSlotIdx = p.socials.length; // 0-based: si ya hay 1, el nuevo es índice 1
+            const defType = defaults.socials[newSlotIdx] || '';
+            p.socials.push({ type: defType, handle: '' });
+            saveData();
+            broadcastSocialCount();
+            renderTable();
+            broadcastPlayersUpdate();
+            refreshDrawerIfActive(playerIdx);
+        }
+
+        function removeSocialSlot(playerIdx, slotIdx) {
+            const p = playersData[playerIdx];
+            if (p.socials.length <= 1) return;
+            p.socials.splice(slotIdx, 1);
+            saveData();
+            broadcastSocialCount();
+            renderTable();
+            broadcastPlayersUpdate();
+            refreshDrawerIfActive(playerIdx);
+        }
+
+        function broadcastPlayersUpdate() {
+            fgcChannel.postMessage({
+                type: 'PLAYERS_UPDATE',
+                payload: {
+                    players: playersData.map(p => ({
+                        id: p.id, alias: p.alias, flag: p.flag,
+                        shield: p.shield,
+                        socials: p.socials || [{ type: '', handle: '' }]
+                    }))
+                }
+            });
+        }
+
+        // Señal para que Arquitecto sepa cuántos slots de red social hay por jugador
+        function broadcastSocialCount() {
+            fgcChannel.postMessage({
+                type: 'SOCIAL_SLOTS_UPDATE',
+                payload: {
+                    players: playersData.map(p => ({
+                        id: p.id,
+                        socialCount: (p.socials || []).length
+                    }))
+                }
+            });
         }
 
         // =====================================================
         //  PICKER (MODAL) CON BÚSQUEDA
         // =====================================================
-        function openPicker(type, playerIdx) {
-            currentPicker = { active: true, type, playerIndex: playerIdx };
+        function openPicker(type, playerIdx, slotIdx = 0) {
+            currentPicker = { active: true, type, playerIndex: playerIdx, slotIndex: slotIdx };
             const overlay = document.getElementById('picker-overlay');
             const grid = document.getElementById('picker-grid');
             const searchInput = document.getElementById('picker-search');
@@ -2088,10 +3265,11 @@
                         lbl.textContent = 'Ninguno'; lbl.style.fontStyle = 'italic'; lbl.style.color = 'var(--text-muted)';
                     }
                 } else if (type === 'social') {
-                    defaults.social = value || null;
-                    const img = document.getElementById('default-social-img');
-                    const ph = document.getElementById('default-social-ph');
-                    const lbl = document.getElementById('default-social-label');
+                    const slot = currentPicker.defaultSocialSlot || 1;
+                    defaults.socials[slot - 1] = value || null;
+                    const img = document.getElementById(`default-social-img-${slot}`);
+                    const ph  = document.getElementById(`default-social-ph-${slot}`);
+                    const lbl = document.getElementById(`default-social-label-${slot}`);
                     if (value) {
                         img.src = `./redes/${value}`; img.style.display = 'block'; ph.style.display = 'none';
                         lbl.textContent = value.replace(/\.[^/.]+$/, ''); lbl.style.fontStyle = 'normal'; lbl.style.color = 'var(--text-main)';
@@ -2106,23 +3284,29 @@
             }
 
             const field = type === 'social' ? 'socialType' : type;
-            updateData(currentPicker.playerIndex, field, value);
+            if (type === 'social') {
+                const slotIdx = currentPicker.slotIndex || 0;
+                playersData[currentPicker.playerIndex].socials[slotIdx].type = value;
+                saveData();
+            } else {
+                updateData(currentPicker.playerIndex, field, value);
+            }
             renderTable();
             renderBracket();
-            fgcChannel.postMessage({
-                type: 'PLAYERS_UPDATE',
-                payload: {
-                    players: playersData.map(p => ({
-                        id: p.id, alias: p.alias, flag: p.flag,
-                        shield: p.shield, socialType: p.socialType, socialHandle: p.socialHandle
-                    }))
-                }
-            });
+            broadcastPlayersUpdate();
+            // Refresh drawer + mark dirty if this player is in the active match
+            refreshDrawerIfActive(currentPicker.playerIndex);
             closePicker(true);
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closePicker(true);
+            if (e.key === 'Escape') {
+                if (currentPicker.active) {
+                    closePicker(true);
+                } else {
+                    cancelMatch();
+                }
+            }
         });
 
         // =====================================================
@@ -2131,13 +3315,15 @@
         const defaults = {
             flag: JSON.parse(localStorage.getItem('fgc_default_flag') || '{"code":"do","name":"Republica Dominicana"}'),
             shield: JSON.parse(localStorage.getItem('fgc_default_shield') || 'null') || null,
-            social: JSON.parse(localStorage.getItem('fgc_default_social') || 'null') || null,
+            socials: JSON.parse(localStorage.getItem('fgc_default_socials') || '[null,null,null]'),
+            autoOpenDrawer: JSON.parse(localStorage.getItem('fgc_auto_open_drawer') ?? 'true'),
         };
 
         function saveDefaults() {
             localStorage.setItem('fgc_default_flag', JSON.stringify(defaults.flag));
             localStorage.setItem('fgc_default_shield', JSON.stringify(defaults.shield));
-            localStorage.setItem('fgc_default_social', JSON.stringify(defaults.social));
+            localStorage.setItem('fgc_default_socials', JSON.stringify(defaults.socials));
+            localStorage.setItem('fgc_auto_open_drawer', JSON.stringify(defaults.autoOpenDrawer));
         }
 
         function applyDefaultsUI() {
@@ -2154,15 +3340,34 @@
                 document.getElementById('default-shield-label').style.fontStyle = 'normal';
                 document.getElementById('default-shield-label').style.color = 'var(--text-main)';
             }
-            if (defaults.social) {
-                const img = document.getElementById('default-social-img');
-                img.src = `./redes/${defaults.social}`;
-                img.style.display = 'block';
-                document.getElementById('default-social-ph').style.display = 'none';
-                document.getElementById('default-social-label').textContent = defaults.social.replace(/\.[^/.]+$/, '');
-                document.getElementById('default-social-label').style.fontStyle = 'normal';
-                document.getElementById('default-social-label').style.color = 'var(--text-main)';
-            }
+            // Renderizar los 3 slots de red social
+            [1, 2, 3].forEach(slot => {
+                const val = defaults.socials[slot - 1];
+                const img = document.getElementById(`default-social-img-${slot}`);
+                const ph  = document.getElementById(`default-social-ph-${slot}`);
+                const lbl = document.getElementById(`default-social-label-${slot}`);
+                if (val) {
+                    img.src = `./redes/${val}`;
+                    img.style.display = 'block';
+                    ph.style.display = 'none';
+                    lbl.textContent = val.replace(/\.[^/.]+$/, '');
+                    lbl.style.fontStyle = 'normal';
+                    lbl.style.color = 'var(--text-main)';
+                } else {
+                    img.style.display = 'none';
+                    ph.style.display = '';
+                    lbl.textContent = 'Ninguna';
+                    lbl.style.fontStyle = 'italic';
+                    lbl.style.color = 'var(--text-muted)';
+                }
+            });
+            // Inicializar toggle Panel de Combate
+            const toggleEl = document.getElementById('toggle-auto-drawer');
+            if (toggleEl) toggleEl.checked = defaults.autoOpenDrawer;
+            const labelEl = document.getElementById('auto-drawer-label');
+            if (labelEl) labelEl.textContent = defaults.autoOpenDrawer
+                ? 'Apertura automática al seleccionar partida'
+                : 'Solo manual (usar el botón lateral)';
         }
 
         function openSettings() {
@@ -2172,8 +3377,16 @@
             document.getElementById('settings-overlay').classList.remove('visible');
         }
 
-        function openDefaultPicker(type) {
-            currentPicker = { active: true, type, playerIndex: null, isDefault: true };
+        function toggleAutoDrawer(val) {
+            defaults.autoOpenDrawer = val;
+            saveDefaults();
+            document.getElementById('auto-drawer-label').textContent = val
+                ? 'Apertura automática al seleccionar partida'
+                : 'Solo manual (usar el botón lateral)';
+        }
+
+        function openDefaultPicker(type, socialSlot = 1) {
+            currentPicker = { active: true, type, playerIndex: null, isDefault: true, defaultSocialSlot: socialSlot };
             const overlay = document.getElementById('picker-overlay');
             const grid = document.getElementById('picker-grid');
             const searchInput = document.getElementById('picker-search');
@@ -2219,10 +3432,32 @@
                 showToast(`Bandera aplicada a ${playersData.length} participantes`, 'success');
             } else if (type === 'shield') {
                 playersData.forEach(p => p.shield = defaults.shield || '');
-                showToast(`Escudo aplicado a ${playersData.length} participantes`, 'success');
+                const msg = defaults.shield
+                    ? `Escudo aplicado a ${playersData.length} participantes`
+                    : `Escudo eliminado de ${playersData.length} participantes`;
+                showToast(msg, 'success');
             } else if (type === 'social') {
-                playersData.forEach(p => p.socialType = defaults.social || '');
-                showToast(`Red social aplicada a ${playersData.length} participantes`, 'success');
+                // Contar cuántos slots tienen imagen (0 = reset total)
+                let activeCount = 0;
+                defaults.socials.forEach((val, i) => { if (val) activeCount = i + 1; });
+
+                playersData.forEach(p => {
+                    migrateSocials(p);
+                    if (activeCount === 0) {
+                        // Reset: dejar solo un slot vacío
+                        p.socials = [{ type: '', handle: '' }];
+                    } else {
+                        p.socials = defaults.socials.slice(0, activeCount).map(val => ({
+                            type: val || '',
+                            handle: ''
+                        }));
+                    }
+                });
+                broadcastSocialCount();
+                const msg = activeCount === 0
+                    ? `Redes sociales eliminadas de ${playersData.length} participantes`
+                    : `${activeCount} red(es) social(es) aplicada(s) a ${playersData.length} participantes`;
+                showToast(msg, 'success');
             }
             saveData();
             renderTable();
@@ -2284,6 +3519,8 @@
             const allRounds = (pool.rounds || []).slice().sort((a, b) => a.number - b.number);
             const winnersRounds = allRounds.filter(r => r.losers === 0);
             const losersRounds = allRounds.filter(r => r.losers === 1);
+
+
 
             // Detectar Grand Finals: últimas rondas winners donde todos los matches no tienen winner_match_id
             let grandRounds = [];
@@ -2617,7 +3854,9 @@
 
                 // Place match cards
                 if (round.matches) {
-                    round.matches.forEach((match, mIdx) => {
+                    // Ordenar matches por round_display_order para coincidir con el orden visual de Round One
+                    const sortedMatches = round.matches.slice().sort((a, b) => (a.round_display_order ?? a.id) - (b.round_display_order ?? b.id));
+                    sortedMatches.forEach((match, mIdx) => {
                         const isBronzeMatch = round._isBronze || match.is_third_place || match.third_place || match.bronze ||
                             ((match.name || match.label || '').toLowerCase().includes('bronze'));
                         // Use resolvedRoundName so lobby custom names reach the controller
@@ -2851,6 +4090,8 @@
 
         function selectActiveMatch(match, roundName, requiredScore, format) {
             activeMatchId = match.id;
+            activeMatchState = { match, roundName, requiredScore, format };
+            drawerDirty = false; // fresh match, no pending changes
 
             const p1 = playersData.find(p => p.id === match.tournament_player1_id);
             const p2 = playersData.find(p => p.id === match.tournament_player2_id);
@@ -2870,21 +4111,293 @@
                         name: p1.alias,
                         flag: p1.flag,
                         shield: p1.shield,
-                        socialType: p1.socialType,
-                        socialHandle: p1.socialHandle
-                    } : { name: 'TBD', flag: 'do', shield: '', socialType: '', socialHandle: '' },
+                        socials: p1.socials || [{ type: p1.socialType || '', handle: p1.socialHandle || '' }]
+                    } : { name: 'TBD', flag: 'do', shield: '', socials: [{ type: '', handle: '' }] },
                     p2: p2 ? {
                         name: p2.alias,
                         flag: p2.flag,
                         shield: p2.shield,
-                        socialType: p2.socialType,
-                        socialHandle: p2.socialHandle
-                    } : { name: 'TBD', flag: 'do', shield: '', socialType: '', socialHandle: '' }
+                        socials: p2.socials || [{ type: p2.socialType || '', handle: p2.socialHandle || '' }]
+                    } : { name: 'TBD', flag: 'do', shield: '', socials: [{ type: '', handle: '' }] }
                 }
             });
 
+            // Update drawer and table highlighting
+            populateMatchDrawer(match, p1, p2, roundName);
+            document.getElementById('drawer-toggle-btn').style.display = 'flex';
+            if (defaults.autoOpenDrawer) {
+                document.getElementById('match-drawer').classList.add('open');
+            }
+            renderTable();
             renderBracket();
             showToast(`Partida #${match.id} enviada al Controlador`, 'info');
+        }
+
+        // =====================================================
+        //  DRAWER — ACTUALIZAR (sin resetear marcadores)
+        // =====================================================
+        //  DRAWER DIRTY STATE
+        // =====================================================
+        function markDrawerDirty() {
+            if (!activeMatchId) return;
+            drawerDirty = true;
+            const btn = document.getElementById('btn-drawer-update');
+            btn.classList.remove('sent');
+            btn.classList.add('pending');
+            btn.textContent = '↑ Actualizar *';
+        }
+
+        function clearDrawerDirty() {
+            drawerDirty = false;
+            const btn = document.getElementById('btn-drawer-update');
+            btn.classList.remove('pending');
+        }
+
+        // =====================================================
+        function drawerSendUpdate() {
+            if (!activeMatchId || !activeMatchState) return;
+
+            const { match, roundName, requiredScore, format } = activeMatchState;
+            const p1 = playersData.find(p => p.id === match.tournament_player1_id);
+            const p2 = playersData.find(p => p.id === match.tournament_player2_id);
+            const { p1Side, p2Side } = getSides(roundName, format);
+
+            fgcChannel.postMessage({
+                type: 'LOAD_MATCH',
+                payload: {
+                    match_id: match.id,
+                    round: roundName,
+                    required_score: requiredScore || null,
+                    format: format,
+                    p1Side,
+                    p2Side,
+                    skipReset: true,   // ← controlador aplica cambios SIN resetear marcadores ni mostrar "Iniciar Partida"
+                    p1: p1 ? {
+                        name: p1.alias,
+                        flag: p1.flag,
+                        shield: p1.shield,
+                        socials: p1.socials || [{ type: '', handle: '' }]
+                    } : { name: 'TBD', flag: 'do', shield: '', socials: [{ type: '', handle: '' }] },
+                    p2: p2 ? {
+                        name: p2.alias,
+                        flag: p2.flag,
+                        shield: p2.shield,
+                        socials: p2.socials || [{ type: '', handle: '' }]
+                    } : { name: 'TBD', flag: 'do', shield: '', socials: [{ type: '', handle: '' }] }
+                }
+            });
+
+            clearDrawerDirty();
+            const btn = document.getElementById('btn-drawer-update');
+            btn.classList.add('sent');
+            btn.textContent = '✓ Enviado';
+            setTimeout(() => {
+                btn.classList.remove('sent');
+                btn.textContent = '↑ Actualizar';
+            }, 1800);
+        }
+
+        // =====================================================
+        //  CANCELAR PARTIDA
+        // =====================================================
+        function cancelMatch() {
+            if (!activeMatchId) return;
+            activeMatchId = null;
+            activeMatchState = null;
+            drawerDirty = false;
+            // Quitar clase active-match del bracket y highlight de tabla
+            document.querySelectorAll('.match-card.active-match').forEach(c => c.classList.remove('active-match'));
+            renderTable();
+            renderBracket();
+            closeDrawer();
+        }
+
+        function closeDrawer() {
+            const drawer = document.getElementById('match-drawer');
+            const toggleBtn = document.getElementById('drawer-toggle-btn');
+            // Reset dirty state
+            drawerDirty = false;
+            const updateBtn = document.getElementById('btn-drawer-update');
+            updateBtn.classList.remove('pending', 'sent');
+            updateBtn.textContent = '↑ Actualizar';
+            // Slide out with animation, then fully hide
+            drawer.classList.remove('open');
+            setTimeout(() => {
+                toggleBtn.style.display = 'none';
+                // Reset content for next match
+                document.getElementById('drawer-content').innerHTML =
+                    '<div class="drawer-empty-state">Selecciona un combate en el Bracket para editar a los jugadores aquí.</div>';
+                document.getElementById('drawer-subtitle').innerText = 'Ronda';
+            }, 320); // matches the CSS transition duration
+        }
+        function toggleMatchDrawer() {
+            if (!activeMatchId) return;
+            const drawer = document.getElementById('match-drawer');
+            drawer.classList.toggle('open');
+        }
+
+        function populateMatchDrawer(match, p1, p2, roundName) {
+            document.getElementById('drawer-subtitle').innerText = roundName || `Ronda del M #${match.id}`;
+            const container = document.getElementById('drawer-content');
+            container.innerHTML = '';
+
+            const p1Idx = playersData.findIndex(p => p.id === match.tournament_player1_id);
+            const p2Idx = playersData.findIndex(p => p.id === match.tournament_player2_id);
+
+            container.appendChild(buildDrawerPlayerCard(1, p1, p1Idx));
+            container.appendChild(buildDrawerPlayerCard(2, p2, p2Idx));
+        }
+
+        function buildDrawerPlayerCard(playerNum, p, idx) {
+            const card = document.createElement('div');
+            card.className = 'drawer-player-card';
+
+            if (!p) {
+                card.innerHTML = `<div class="drawer-player-label">JUGADOR ${playerNum}</div>
+                                  <div class="drawer-empty-state">TBD / Por Determinar</div>`;
+                return card;
+            }
+
+            const flagImg = `<img src="./banderas/${p.flag}.png" class="resource-img" onerror="this.style.display='none'">`;
+            const shieldImg = p.shield
+                ? `<img src="./escudos/${p.shield}" class="resource-img" onerror="this.style.display='none'">`
+                : `<span class="picker-item-none">+ ESC</span>`;
+
+            card.innerHTML = `
+                <div class="drawer-player-label">JUGADOR ${playerNum} — ${p.apiName}</div>
+                <div class="drawer-field">
+                    <label>Alias (En Pantalla)</label>
+                    <input type="text" value="${p.alias}" 
+                        oninput="updateAliasDrawer(${idx}, this.value)" 
+                        onkeydown="if(event.key==='Enter'){this.blur();}">
+                </div>
+                <div class="drawer-row">
+                    <div class="drawer-col">
+                        <div class="drawer-field" style="margin-bottom:0;">
+                            <label>Bandera</label>
+                            <button class="resource-btn" style="width:100%; height:40px;" onclick="openPicker('flag', ${idx})">${flagImg}</button>
+                        </div>
+                    </div>
+                    <div class="drawer-col">
+                        <div class="drawer-field" style="margin-bottom:0;">
+                            <label>Escudo</label>
+                            <button class="resource-btn" style="width:100%; height:40px;" onclick="openPicker('shield', ${idx})">${shieldImg}</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="drawer-field" style="margin-top: 12px; margin-bottom: 0;">
+                    <label>Redes Sociales</label>
+                    <div class="drawer-socials-container" id="drawer-socials-${idx}"></div>
+                </div>
+            `;
+
+            const socialsContainer = card.querySelector(`#drawer-socials-${idx}`);
+            // Always render exactly 3 fixed-height slots so the card never resizes
+            const socials = (p.socials && p.socials.length > 0) ? p.socials : [];
+            const refreshDrawer = () => {
+                // Helper to re-render this drawer after adding/removing a slot
+                if (activeMatchId) {
+                    for (const stage of (tournamentStages || [])) {
+                        for (const pool of (stage.pools || [])) {
+                            for (const round of (pool.rounds || [])) {
+                                for (const match of (round.matches || [])) {
+                                    if (match.id === activeMatchId) {
+                                        const dp1 = playersData.find(pp => pp.id === match.tournament_player1_id);
+                                        const dp2 = playersData.find(pp => pp.id === match.tournament_player2_id);
+                                        populateMatchDrawer(match, dp1, dp2, document.getElementById('drawer-subtitle').innerText);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            for (let si = 0; si < 3; si++) {
+                const s = socials[si];
+                const slotDiv = document.createElement('div');
+                slotDiv.className = 'drawer-social-slot';
+                // Fixed height so all 3 slots always occupy the same space
+                slotDiv.style.cssText = 'display:flex; align-items:center; gap:6px; margin-bottom:6px; height:34px;';
+
+                if (s !== undefined) {
+                    // --- ACTIVE SLOT: ícono picker + input handle + botón quitar ---
+                    const socialImg = s.type
+                        ? `<img src="./redes/${s.type}" class="resource-img" onerror="this.style.display='none'">`
+                        : `<span class="picker-item-none" style="font-size:0.65rem;">+</span>`;
+                    const iconBtn = document.createElement('button');
+                    iconBtn.className = 'resource-btn';
+                    iconBtn.style.cssText = 'width:32px; height:32px; flex-shrink:0; padding:4px;';
+                    iconBtn.innerHTML = socialImg;
+                    iconBtn.onclick = () => openPicker('social', idx, si);
+                    slotDiv.appendChild(iconBtn);
+
+                    const handleInput = document.createElement('input');
+                    handleInput.type = 'text';
+                    handleInput.placeholder = '@usuario';
+                    handleInput.value = s.handle || '';
+                    handleInput.className = 'drawer-social-handle';
+                    handleInput.style.cssText = 'flex:1; background:rgba(15,17,26,0.8); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px 8px; font-family:Montserrat,sans-serif; font-size:0.72rem; font-weight:700; height:32px;';
+                    handleInput.oninput = (e) => {
+                        // Update data & mark dirty without re-rendering drawer (would lose focus)
+                        playersData[idx].socials[si].handle = e.target.value;
+                        saveData();
+                        broadcastPlayersUpdate();
+                        markDrawerDirty();
+                        // Sync to table debounced
+                        clearTimeout(window.drawerHandleTimeout);
+                        window.drawerHandleTimeout = setTimeout(() => renderTable(), 500);
+                    };
+                    slotDiv.appendChild(handleInput);
+
+                    // Botón quitar (solo si hay más de 1 slot activo)
+                    if (socials.length > 1) {
+                        const removeBtn = document.createElement('button');
+                        removeBtn.style.cssText = 'background:none; border:none; color:#334155; font-size:13px; cursor:pointer; padding:0 3px; line-height:1; flex-shrink:0; transition:color 0.2s;';
+                        removeBtn.innerHTML = '✕';
+                        removeBtn.title = 'Quitar esta red';
+                        removeBtn.onmouseover = () => removeBtn.style.color = '#ff5252';
+                        removeBtn.onmouseout  = () => removeBtn.style.color = '#334155';
+                        removeBtn.onclick = () => {
+                            removeSocialSlot(idx, si);
+                            refreshDrawer();
+                        };
+                        slotDiv.appendChild(removeBtn);
+                    }
+                } else {
+                    // --- EMPTY SLOT: botón "+ Red" que ocupa el mismo espacio ---
+                    const addBtn = document.createElement('button');
+                    addBtn.style.cssText = 'display:flex; align-items:center; justify-content:center; gap:5px; width:100%; height:32px; background:rgba(255,176,0,0.06); border:1px dashed rgba(255,176,0,0.3); color:#ffb000; font-size:0.6rem; font-weight:900; font-family:Montserrat,sans-serif; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:all 0.2s;';
+                    addBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Red`;
+                    addBtn.onmouseover = () => { addBtn.style.background='rgba(255,176,0,0.15)'; addBtn.style.borderColor='#ffb000'; };
+                    addBtn.onmouseout  = () => { addBtn.style.background='rgba(255,176,0,0.06)'; addBtn.style.borderColor='rgba(255,176,0,0.3)'; };
+                    addBtn.onclick = () => {
+                        addSocialSlot(idx);
+                        refreshDrawer();
+                    };
+                    slotDiv.appendChild(addBtn);
+                }
+
+                socialsContainer.appendChild(slotDiv);
+            }
+
+            return card;
+        }
+
+        // We need a specific function because updateAlias triggers renderBracket which might close inputs if not careful
+        function updateAliasDrawer(idx, val) {
+            playersData[idx].alias = val;
+            saveData();
+            // Don't re-render full bracket immediately if we are typing, just broadcast and wait
+            // But we do want real-time on the overlay:
+            broadcastPlayersUpdate();
+            markDrawerDirty();
+            // Debounce table/bracket render to avoid unfocusing the drawer input
+            clearTimeout(window.drawerRenderTimeout);
+            window.drawerRenderTimeout = setTimeout(() => {
+                renderBracket();
+                renderTable();
+            }, 500);
         }
 
         /**
