@@ -1564,30 +1564,55 @@
                     
                     try {
                         const parsedData = JSON.parse(config);
-                        let actualLayers = parsedData;
+                        let actualLayers = [];
 
-                        if (!Array.isArray(parsedData) && parsedData.layers) {
-                            actualLayers = parsedData.layers;
+                        // Formato moderno: { tabs, activeTabId, settings }
+                        if (!Array.isArray(parsedData) && parsedData.tabs) {
+                            const activeTab = parsedData.tabs.find(t => t.id === parsedData.activeTabId) || parsedData.tabs[0];
+                            actualLayers = (activeTab && activeTab.layers) ? activeTab.layers : [];
+
                             if (parsedData.settings) {
-                                if (parsedData.settings.format !== undefined) {
-                                    formatState.type = parsedData.settings.format;
-                                }
-                                if (parsedData.settings.linked !== undefined) {
-                                    formatState.linked = parsedData.settings.linked;
-                                }
-                                
+                                formatState.type   = parsedData.settings.format  !== undefined ? parsedData.settings.format  : null;
+                                formatState.linked = parsedData.settings.linked !== undefined ? parsedData.settings.linked : true;
+
                                 updateFormatUI();
                                 const btn = document.getElementById('btn-fmt-link');
                                 btn.classList.toggle('link-active', formatState.linked);
                                 btn.innerText = formatState.linked ? '⛓ Pegado' : '⛓ Separado';
                                 applyFormat();
                             }
+
+                        // Formato intermedio: { layers, settings }
+                        } else if (!Array.isArray(parsedData) && parsedData.layers) {
+                            actualLayers = parsedData.layers;
+                            if (parsedData.settings) {
+                                formatState.type   = parsedData.settings.format  !== undefined ? parsedData.settings.format  : null;
+                                formatState.linked = parsedData.settings.linked !== undefined ? parsedData.settings.linked : true;
+
+                                updateFormatUI();
+                                const btn = document.getElementById('btn-fmt-link');
+                                btn.classList.toggle('link-active', formatState.linked);
+                                btn.innerText = formatState.linked ? '⛓ Pegado' : '⛓ Separado';
+                                applyFormat();
+                            }
+
+                        // Formato legacy: array plano de layers
+                        } else if (Array.isArray(parsedData)) {
+                            actualLayers = parsedData;
                         }
 
+                        // Nombre del torneo — siempre se escribe (vacío si no existe)
                         const tourneyLayer = actualLayers.find(l => l.id === 'master_tournament_name');
                         const inputTourney = document.getElementById('dock-tournament-name');
                         if (inputTourney) {
                             inputTourney.value = (tourneyLayer && tourneyLayer.text) ? tourneyLayer.text : '';
+                        }
+
+                        // Formato — si el JSON no trae settings, resetear a sin formato
+                        if (!parsedData.settings && !Array.isArray(parsedData)) {
+                            formatState.type = null;
+                            updateFormatUI();
+                            applyFormat();
                         }
 
                         // (no se activa el botón ACTUALIZAR al cambiar overlay)

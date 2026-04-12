@@ -24,6 +24,10 @@ if exist "build" rd /s /q "build"
 if exist "dist" rd /s /q "dist"
 echo.
 
+echo  [INFO] Generando codigo binario de HTMLs para proteccion...
+python pack_html.py
+echo.
+
 echo  [INFO] Iniciando compilacion con el nuevo icono (logo3.ico)...
 echo.
 
@@ -36,6 +40,10 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+
+echo.
+echo  [INFO] Limpiando archivos intermedios de compilacion...
+if exist "embedded_html.py" del "embedded_html.py"
 
 echo.
 echo  [INFO] Copiando carpetas de recursos al lado del .exe...

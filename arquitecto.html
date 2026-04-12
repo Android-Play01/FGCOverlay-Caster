@@ -340,7 +340,7 @@
             display: flex;
             align-items: center;
             white-space: pre;
-            overflow: hidden;
+            overflow: visible;
             pointer-events: none;
         }
 
@@ -491,6 +491,8 @@
             animation: fp-icon-unlock 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
             filter: drop-shadow(0 0 3px rgba(245, 200, 66, 0.5));
         }
+
+        @keyframes fp-pulse {
             0%   { box-shadow: 0 0 6px 1px rgba(245, 200, 66, 0.6), 0 0 14px 3px rgba(245, 160, 20, 0.35); }
             50%  { box-shadow: 0 0 14px 4px rgba(245, 200, 66, 0.95), 0 0 28px 8px rgba(245, 160, 20, 0.55), inset 0 0 8px rgba(255, 220, 80, 0.15); }
             100% { box-shadow: 0 0 6px 1px rgba(245, 200, 66, 0.6), 0 0 14px 3px rgba(245, 160, 20, 0.35); }
@@ -1223,6 +1225,57 @@
             white-space: nowrap;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
         }
+
+        /* --- PESTAÑAS EN SIDEBAR DERECHO --- */
+        
+        @keyframes menu-pop-left {
+            from { opacity: 0; transform: translateX(6px) scale(0.97); }
+            to   { opacity: 1; transform: translateX(0)   scale(1); }
+        }
+
+        .tab-add-menu {
+            position: absolute;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-right: 2px solid var(--accent);
+            border-radius: 6px 0 6px 6px;
+            display: none;
+            flex-direction: column;
+            width: 200px;
+            z-index: 1001;
+            box-shadow: -8px 8px 24px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,188,212,0.05);
+            overflow: hidden;
+            animation: menu-pop-left 0.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .tab-add-menu.show {
+            display: flex;
+        }
+
+        .tab-add-option {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #bbb;
+            background: transparent;
+            border: none;
+            text-align: right;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.1s, color 0.1s;
+        }
+
+        .tab-add-option:hover {
+            background: rgba(0, 188, 212, 0.12);
+            color: #fff;
+        }
+        
+        .tab-add-option:not(:last-child) {
+            border-bottom: 1px solid #252525;
+        }
     </style>
 </head>
 
@@ -1390,6 +1443,38 @@
                 <path d="M555.1 751.1c8.6-10 17.6-20.4 25.2-28.6L342.9 439.3l-5.2 2.5c-1.4 0.7-144.7 68.3-217.4 41.4l-25-9.2 341 432.1 5.8-8.3c0.3-0.4 28.3-40.6 59.1-80.9 17.1-22.4 30.4-38.8 40.6-50.7 5.1-6.2 9.6-11.1 13.3-15.1z" fill="currentColor" opacity="0.5"/>
             </svg>
         </button>
+
+        <div style="height: 1px; background: #333; width: 80%; margin: 6px 0;"></div>
+        
+        <div style="display: flex; flex-direction: column; align-items: center; width: 100%; position: relative;">
+            <div id="tabs-container" style="display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center;"></div>
+            <div class="tab-add-wrap" style="position: relative; display: flex; justify-content: center; width: 100%; margin-top: 8px; margin-left: 0;">
+                <button class="prop-tool-btn" id="tab-add-btn" title="Nueva pestaña" onclick="toggleTabMenu(event)" style="margin: 0; color: #888;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+                <div class="tab-add-menu" id="tab-add-menu" style="top: 0; bottom: auto; left: auto; right: 100%; margin-right: 15px;">
+                    <button class="tab-add-option" onclick="createNewTab(false); closeTabMenu()">Pestaña vacía &nbsp;📄</button>
+                    <button class="tab-add-option" onclick="createNewTab(true); closeTabMenu()">Copiar pestaña &nbsp;📝</button>
+                </div>
+            </div>
+
+            <!-- Nuevo menú contextual de clic derecho/doble clic en las pestañas -->
+            <div class="tab-add-menu" id="tab-action-menu" style="top: 0; bottom: auto; left: auto; right: 100%; margin-right: 15px; width: 220px;">
+                <div style="padding: 10px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid #252525;" id="tab-action-rename-area">
+                    <label style="font-size:10px; color:#aaa; font-weight: bold; text-align: left;">RENOMBRAR PESTAÑA</label>
+                    <input type="text" id="tab-action-name-input" style="background:#111; border:1px solid #555; color:#fff; font-size:11px; padding:6px; border-radius:3px; outline:none;" autocomplete="off">
+                    <button class="tab-add-option" style="justify-content:center; background: rgba(0, 188, 212, 0.12); padding: 8px;" onclick="commitTabRename()">Guardar nombre</button>
+                </div>
+                <button class="tab-add-option" style="color:var(--danger); justify-content: space-between; padding: 12px 14px;" onclick="commitTabDelete()">
+                    <span>Eliminar pestaña</span><span>🗑️</span>
+                </button>
+            </div>
+        </div>
+
+        <div style="margin-top: auto;"></div>
     </div>
 
     <div id="sidebar-right">
@@ -1457,11 +1542,16 @@
                         <label>Sombra</label>
                         <input type="checkbox" id="inp-shadow">
                     </div>
+                    <div class="input-row" id="row-split-sponsor" style="display:none">
+                        <label>Separar Sponsor</label>
+                        <input type="checkbox" id="inp-split-sponsor">
+                    </div>
 
                     <!-- ESCALA VERTICAL -->
                     <div class="txt-transform-row">
-                        <svg class="tool-icon" style="width:18px;height:18px;flex-shrink:0;color:var(--text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="3" x2="12" y2="21"/><polyline points="6 9 12 3 18 9"/><polyline points="6 15 12 21 18 15"/>
+                        <svg style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20.29,16.29l-.29.3V7.41l.29.3a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42l-2-2a1,1,0,0,0-1.42,0l-2,2a1,1,0,0,0,1.42,1.42l.29-.3v9.18l-.29-.3a1,1,0,0,0-1.42,1.42l2,2a1,1,0,0,0,1.42,0l2-2a1,1,0,0,0-1.42-1.42Z" style="fill:var(--accent);"/>
+                            <path d="M13,4H3A1,1,0,0,0,2,5V7A1,1,0,0,0,4,7V6H7V18H6a1,1,0,0,0,0,2h4a1,1,0,0,0,0-2H9V6h3V7a1,1,0,0,0,2,0V5A1,1,0,0,0,13,4Z" style="fill:var(--text-muted);"/>
                         </svg>
                         <input type="number" id="inp-scaley-num" class="txt-transform-num" value="100" min="10" max="300">
                         <span class="txt-transform-unit">%</span>
@@ -1476,8 +1566,9 @@
 
                     <!-- RASTREAR (TRACKING / letter-spacing) -->
                     <div class="txt-transform-row">
-                        <svg class="tool-icon" style="width:18px;height:18px;flex-shrink:0;color:var(--text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12"/><polyline points="9 6 3 12 9 18"/><polyline points="15 6 21 12 15 18"/>
+                        <svg style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21.71,18.29l-2-2a1,1,0,0,0-1.42,1.42l.3.29H5.41l.3-.29a1,1,0,0,0-1.42-1.42l-2,2a1,1,0,0,0,0,1.42l2,2a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42L5.41,20H18.59l-.3.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l2-2A1,1,0,0,0,21.71,18.29Z" style="fill:var(--accent);"/>
+                            <path d="M17,2H7A1,1,0,0,0,6,3V5A1,1,0,0,0,8,5V4h3V14H10a1,1,0,0,0,0,2h4a1,1,0,0,0,0-2H13V4h3V5a1,1,0,0,0,2,0V3A1,1,0,0,0,17,2Z" style="fill:var(--text-muted);"/>
                         </svg>
                         <input type="number" id="inp-tracking-num" class="txt-transform-num" value="0" min="-20" max="100">
                         <span class="txt-transform-unit">px</span>
@@ -1737,8 +1828,14 @@
                 }
             } else if (type === 'UPDATE_DATA') {
                 if (payload.tournamentName !== undefined) updateMasterLayer(MASTER_IDS.TOURNAMENT_NAME, payload.tournamentName);
-                if (payload.p1Name !== undefined) updateMasterLayer(MASTER_IDS.P1_NAME, payload.p1Name);
-                if (payload.p2Name !== undefined) updateMasterLayer(MASTER_IDS.P2_NAME, payload.p2Name);
+                if (payload.p1Name !== undefined) {
+                    updateMasterLayer(MASTER_IDS.P1_NAME, payload.p1Name);
+                    updateMasterLayer(MASTER_IDS.P1_SPONSOR, payload.p1Name);
+                }
+                if (payload.p2Name !== undefined) {
+                    updateMasterLayer(MASTER_IDS.P2_NAME, payload.p2Name);
+                    updateMasterLayer(MASTER_IDS.P2_SPONSOR, payload.p2Name);
+                }
                 if (payload.round !== undefined) updateMasterLayer(MASTER_IDS.ROUND, payload.round);
                 if (payload.p1Score !== undefined) updateMasterLayer(MASTER_IDS.P1_SCORE, payload.p1Score);
                 if (payload.p2Score !== undefined) updateMasterLayer(MASTER_IDS.P2_SCORE, payload.p2Score);
@@ -1805,18 +1902,55 @@
 
                     // Si es un objeto, en este caso deberíamos verificar que sea array
                     if (typeof d === 'object' && d !== null) {
-                        // Si d es un objeto pero no array
-                        if (Array.isArray(d)) {
-                            state.layers = d;
-                        } else if (d.layers && Array.isArray(d.layers)) {
-                            state.layers = d.layers;
-                            state.folders = Array.isArray(d.folders) ? d.folders : [];
+                        if (d.tabs && Array.isArray(d.tabs)) {
+                            state.tabs = d.tabs;
+                            state.activeTabId = d.activeTabId || (d.tabs.length > 0 ? d.tabs[0].id : 'tab_legacy');
                             if (d.settings) {
                                 state.format = d.settings.format || 'FT';
                                 state.linked = d.settings.linked !== undefined ? d.settings.linked : true;
                             }
+                            const active = state.tabs.find(t => t.id === state.activeTabId);
+                            if (active) {
+                                state.layers = JSON.parse(JSON.stringify(active.layers || []));
+                                state.folders = JSON.parse(JSON.stringify(active.folders || []));
+                                state.guides = JSON.parse(JSON.stringify(active.guides || []));
+                                state.history = active.history || [];
+                                state.historyStep = active.historyStep !== undefined ? active.historyStep : -1;
+                            }
+                            if (typeof renderTabs === 'function') renderTabs();
                         } else {
-                            state.layers = Object.values(d);
+                            // MIGRACIÓN: Formatos viejos (sin tabs) se convierten en una pestaña única obligatoria
+                            const newTabId = 'tab_legacy_' + Date.now();
+                            let layersData = [];
+                            let foldersData = [];
+                            
+                            if (Array.isArray(d)) {
+                                layersData = d;
+                            } else if (d.layers && Array.isArray(d.layers)) {
+                                layersData = d.layers;
+                                foldersData = Array.isArray(d.folders) ? d.folders : [];
+                                if (d.settings) {
+                                    state.format = d.settings.format || 'FT';
+                                    state.linked = d.settings.linked !== undefined ? d.settings.linked : true;
+                                }
+                            } else {
+                                layersData = Object.values(d);
+                            }
+
+                            state.tabs = [{
+                                id: newTabId,
+                                name: 'Principal',
+                                layers: layersData,
+                                folders: foldersData,
+                                guides: [],
+                                history: [],
+                                historyStep: -1
+                            }];
+                            state.activeTabId = newTabId;
+                            state.layers = JSON.parse(JSON.stringify(layersData));
+                            state.folders = JSON.parse(JSON.stringify(foldersData));
+                            
+                            if (typeof renderTabs === 'function') renderTabs();
                         }
 
                         state.selection = [];
@@ -1835,83 +1969,85 @@
         };
 
         function updateMasterLayer(id, newText) {
-            const layer = state.layers.find(l => l.id === id);
-            if (layer) {
-                layer.text = newText.toString();
-                propagateChange(layer.id, 'text', layer.text);
-            }
+            state.tabs.forEach(tab => {
+                const layerArr = (tab.id === state.activeTabId) ? state.layers : tab.layers;
+                const layer = layerArr.find(l => l.id === id);
+                if (layer) {
+                    layer.text = newText.toString();
+                    propagateChangeInArray(layerArr, layer.id, 'text', layer.text);
+                }
+            });
         }
 
         function updateMasterImage(id, src) {
-            const layer = state.layers.find(l => l.id === id);
-            if (layer && layer.type === 'image') {
-                if (layer.src === src) return; // src sin cambios → no reiniciar transición
-                layer.src = src;
-                propagateChange(layer.id, 'src', layer.src);
-                resetTransitionPhase(layer.id);
-                state.layers.forEach(m => {
-                    if (m.transitionTarget === layer.id) resetTransitionPhase(m.id);
-                });
-                render();
-            }
+            state.tabs.forEach(tab => {
+                const layerArr = (tab.id === state.activeTabId) ? state.layers : tab.layers;
+                const layer = layerArr.find(l => l.id === id);
+                if (layer && layer.type === 'image') {
+                    if (layer.src === src) return; 
+                    layer.src = src;
+                    propagateChangeInArray(layerArr, layer.id, 'src', layer.src);
+                    
+                    if (tab.id === state.activeTabId) {
+                        resetTransitionPhase(layer.id);
+                        layerArr.forEach(m => {
+                            if (m.transitionTarget === layer.id) resetTransitionPhase(m.id);
+                        });
+                        render();
+                    }
+                }
+            });
         }
 
-        /**
-         * Garantiza que existan exactamente `count` slots de red social para el jugador dado.
-         * - Si faltan capas, las clona desde el slot predecesor inmediato y las coloca debajo.
-         * - Si sobran capas (count bajó), las oculta sin borrarlas.
-         */
         function ensureSocialSlots(player, count) {
-            const slots = SOCIAL_SLOT_IDS[player]; // array de {img, handle} por slot
-            const clampedCount = Math.max(1, Math.min(3, count));
+            state.tabs.forEach(tab => {
+                const layerArr = (tab.id === state.activeTabId) ? state.layers : tab.layers;
+                const slots = SOCIAL_SLOT_IDS[player]; 
+                const clampedCount = Math.max(1, Math.min(3, count));
 
-            for (let i = 0; i < 3; i++) {
-                const slot = slots[i];
-                const shouldExist = i < clampedCount;
+                for (let i = 0; i < 3; i++) {
+                    const slot = slots[i];
+                    const shouldExist = i < clampedCount;
 
-                const imgLayer    = state.layers.find(l => l.id === slot.img);
-                const handleLayer = state.layers.find(l => l.id === slot.handle);
+                    const imgLayer    = layerArr.find(l => l.id === slot.img);
+                    const handleLayer = layerArr.find(l => l.id === slot.handle);
 
-                if (shouldExist) {
-                    // --- Slot debe existir ---
-                    if (!imgLayer || !handleLayer) {
-                        // Clonar desde el predecesor inmediato (slot i-1)
-                        const prevSlot        = slots[i - 1];
-                        const prevImg         = state.layers.find(l => l.id === prevSlot.img);
-                        const prevHandle      = state.layers.find(l => l.id === prevSlot.handle);
+                    if (shouldExist) {
+                        if (!imgLayer || !handleLayer) {
+                            const prevSlot        = slots[i - 1];
+                            const prevImg         = layerArr.find(l => l.id === prevSlot.img);
+                            const prevHandle      = layerArr.find(l => l.id === prevSlot.handle);
 
-                        if (prevImg && !imgLayer) {
-                            const newImg = JSON.parse(JSON.stringify(prevImg));
-                            newImg.id    = slot.img;
-                            newImg.y     = prevImg.y + prevImg.h + 10;
-                            newImg.src   = '';
-                            newImg.visible = true;
-                            // Limpiar referencias de transición heredadas
-                            newImg.transitionEnabled = false;
-                            newImg.transitionTarget  = '';
-                            delete newImg._childOriginal;
-                            state.layers.push(newImg);
-                        }
+                            if (prevImg && !imgLayer) {
+                                const newImg = JSON.parse(JSON.stringify(prevImg));
+                                newImg.id    = slot.img;
+                                newImg.y     = prevImg.y + prevImg.h + 10;
+                                newImg.src   = '';
+                                newImg.visible = true;
+                                newImg.transitionEnabled = false;
+                                newImg.transitionTarget  = '';
+                                delete newImg._childOriginal;
+                                layerArr.push(newImg);
+                            }
 
-                        if (prevHandle && !handleLayer) {
-                            const newHandle = JSON.parse(JSON.stringify(prevHandle));
-                            newHandle.id    = slot.handle;
-                            newHandle.y     = prevHandle.y + prevHandle.h + 10;
-                            newHandle.text  = '';
-                            newHandle.visible = true;
-                            state.layers.push(newHandle);
+                            if (prevHandle && !handleLayer) {
+                                const newHandle = JSON.parse(JSON.stringify(prevHandle));
+                                newHandle.id    = slot.handle;
+                                newHandle.y     = prevHandle.y + prevHandle.h + 10;
+                                newHandle.text  = '';
+                                newHandle.visible = true;
+                                layerArr.push(newHandle);
+                            }
+                        } else {
+                            if(imgLayer) imgLayer.visible    = true;
+                            if(handleLayer) handleLayer.visible = true;
                         }
                     } else {
-                        // Capa ya existe — asegurar que esté visible
-                        imgLayer.visible    = true;
-                        handleLayer.visible = true;
+                        if (imgLayer)    imgLayer.visible    = false;
+                        if (handleLayer) handleLayer.visible = false;
                     }
-                } else {
-                    // --- Slot no debe existir (count bajó) — ocultar sin borrar ---
-                    if (imgLayer)    imgLayer.visible    = false;
-                    if (handleLayer) handleLayer.visible = false;
                 }
-            }
+            });
         }
 
         const ICON_EYE_ON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
@@ -1923,6 +2059,8 @@
             TOURNAMENT_NAME: 'master_tournament_name',
             P1_NAME: 'master_p1_name',
             P2_NAME: 'master_p2_name',
+            P1_SPONSOR: 'master_p1_sponsor',
+            P2_SPONSOR: 'master_p2_sponsor',
             P1_SCORE: 'master_p1_score',
             P2_SCORE: 'master_p2_score',
             ROUND: 'master_round_info',
@@ -1990,6 +2128,8 @@
         }
 
         const state = {
+            tabs: [],
+            activeTabId: null,
             layers: [],
             folders: [],
             selection: [],
@@ -2107,7 +2247,7 @@
                         textScaleY: 100,
                         textTracking: 0
                     };
-                    if (id.includes('name')) layer.align = 'left';
+                    if (id.includes('name')) layer.align = id.includes('p2') ? 'right' : 'left';
                     if (id.includes('round')) { layer.fontSize = 40; layer.w = 300; layer.h = 60; }
 
                     if (id.includes('flag')) {
@@ -2124,7 +2264,21 @@
             if(tourneyLayer) { tourneyLayer.fontSize = 44; tourneyLayer.align = 'center'; }
 
             createMaster(MASTER_IDS.P1_NAME, 'text', 140, 50, 'Player 1');
-            createMaster(MASTER_IDS.P2_NAME, 'text', 1420, 50, 'Player 2');
+            createMaster(MASTER_IDS.P2_NAME, 'text', 1380, 50, 'Player 2');
+            
+            createMaster(MASTER_IDS.P1_SPONSOR, 'text', 140, 8, '', 400, 36);
+            createMaster(MASTER_IDS.P2_SPONSOR, 'text', 1420, 8, '', 400, 36);
+            const p1Sp = state.layers.find(l => l.id === MASTER_IDS.P1_SPONSOR);
+            const p2Sp = state.layers.find(l => l.id === MASTER_IDS.P2_SPONSOR);
+            if (p1Sp && p1Sp.colorMain === '#ffffff') { 
+                p1Sp.colorMain = '#00bcd4'; p1Sp.fontSize = 35; 
+                p1Sp.x = 140; p1Sp.y = 8; p1Sp.w = 400; p1Sp.h = 36;
+            }
+            if (p2Sp && p2Sp.colorMain === '#ffffff') { 
+                p2Sp.colorMain = '#00bcd4'; p2Sp.fontSize = 35; 
+                p2Sp.x = 1420; p2Sp.y = 8; p2Sp.w = 400; p2Sp.h = 36;
+            }
+
             createMaster(MASTER_IDS.P1_SCORE, 'counter', 520, 50, '0', 100, 100);
             createMaster(MASTER_IDS.P2_SCORE, 'counter', 1300, 50, '0', 100, 100);
             createMaster(MASTER_IDS.ROUND, 'text', 810, 900, 'Grand Finals', 300, 60);
@@ -2136,17 +2290,26 @@
             createMaster(MASTER_IDS.P2_SOCIAL, 'image', 1860, 250, '', 50, 50);
             createMaster(MASTER_IDS.P1_SOCIAL_HANDLE, 'text', 65, 250, '@usuario', 200, 50);
             createMaster(MASTER_IDS.P2_SOCIAL_HANDLE, 'text', 1655, 250, '@usuario', 200, 50);
-            createMaster(MASTER_IDS.FT, 'text', 760, 960, '', 200, 60);
+            
+            createMaster(MASTER_IDS.FT, 'text', 860, 963, '', 200, 60);
+            const ftLayer = state.layers.find(l => l.id === MASTER_IDS.FT);
+            if (ftLayer && ftLayer.x === 760 && ftLayer.y === 960) {
+                 ftLayer.x = 860; ftLayer.y = 963;
+            }
         }
 
-        function propagateChange(parentId, key, val) {
+        function propagateChangeInArray(layerArr, parentId, key, val) {
             if (['x', 'y', 'w', 'h'].includes(key)) return;
-            state.layers.forEach(child => {
+            layerArr.forEach(child => {
                 if (child.parentId === parentId) {
                     if (key === 'clipPoints') child[key] = JSON.parse(JSON.stringify(val));
                     else child[key] = val;
                 }
             });
+        }
+
+        function propagateChange(parentId, key, val) {
+            propagateChangeInArray(state.layers, parentId, key, val);
         }
 
         function bindEvents() {
@@ -2401,6 +2564,7 @@
             bind('inp-color-l', 'colorL');
             bind('inp-align', 'align');
             bind('inp-shadow', 'shadow', false, true);
+            bind('inp-split-sponsor', 'splitSponsor', false, true);
 
             // --- ESCALA VERTICAL Y TRACKING ---
             const wireTxtTransform = (numId, rangeId, lblId, key, unit, expandBtnId, sliderRowId) => {
@@ -2597,10 +2761,21 @@
                 }
             }
 
-            const hit = [...state.layers].reverse().find(l =>
-                !l.locked && l.visible !== false &&
-                x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h
-            );
+            const p1Layer = state.layers.find(ly => ly.id === MASTER_IDS.P1_NAME);
+            const p2Layer = state.layers.find(ly => ly.id === MASTER_IDS.P2_NAME);
+
+            const hit = [...state.layers].reverse().find(l => {
+                if (l.locked || l.visible === false) return false;
+                
+                // Ignorar dinámicamente capas vacías
+                if (l.id === MASTER_IDS.TOURNAMENT_NAME || l.id === MASTER_IDS.FT) {
+                    if (!l.text || l.text.trim() === '') return false;
+                }
+                if (l.id === MASTER_IDS.P1_SPONSOR && (!p1Layer || !p1Layer.splitSponsor || !l.text.includes('|'))) return false;
+                if (l.id === MASTER_IDS.P2_SPONSOR && (!p2Layer || !p2Layer.splitSponsor || !l.text.includes('|'))) return false;
+
+                return x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h;
+            });
 
             if (hit) {
                 e.preventDefault();
@@ -2905,8 +3080,19 @@
                 const mx = parseFloat(mq.style.left), my = parseFloat(mq.style.top), mw = parseFloat(mq.style.width), mh = parseFloat(mq.style.height);
                 const newSelection = [];
                 if (mw > 0 && mh > 0) {
+                    const p1Layer = state.layers.find(ly => ly.id === MASTER_IDS.P1_NAME);
+                    const p2Layer = state.layers.find(ly => ly.id === MASTER_IDS.P2_NAME);
+
                     state.layers.forEach(l => {
                         if (l.locked || l.visible === false) return;
+                        
+                        // Ignorar dinámicamente capas vacías para no poder seleccionarlas con la caja de selección
+                        if (l.id === MASTER_IDS.TOURNAMENT_NAME || l.id === MASTER_IDS.FT) {
+                            if (!l.text || l.text.trim() === '') return;
+                        }
+                        if (l.id === MASTER_IDS.P1_SPONSOR && (!p1Layer || !p1Layer.splitSponsor || !l.text.includes('|'))) return;
+                        if (l.id === MASTER_IDS.P2_SPONSOR && (!p2Layer || !p2Layer.splitSponsor || !l.text.includes('|'))) return;
+
                         if (mx < l.x + l.w && mx + mw > l.x && my < l.y + l.h && my + mh > l.y) newSelection.push(l.id);
                     });
                 }
@@ -3122,8 +3308,22 @@
 
         function render() {
             document.querySelectorAll('#artboard-container .layer-el').forEach(el => el.remove());
+            
+            const p1Layer = state.layers.find(ly => ly.id === MASTER_IDS.P1_NAME);
+            const p2Layer = state.layers.find(ly => ly.id === MASTER_IDS.P2_NAME);
+
             state.layers.forEach((l, i) => {
                 if (l.visible === false) return;
+                
+                // Ocultar dinámicamente formato y torneo si no tienen texto
+                if (l.id === MASTER_IDS.TOURNAMENT_NAME || l.id === MASTER_IDS.FT) {
+                    if (!l.text || l.text.trim() === '') return;
+                }
+                
+                // Ocultar sponsor vacío o no activado
+                if (l.id === MASTER_IDS.P1_SPONSOR && (!p1Layer || !p1Layer.splitSponsor || !l.text.includes('|'))) return;
+                if (l.id === MASTER_IDS.P2_SPONSOR && (!p2Layer || !p2Layer.splitSponsor || !l.text.includes('|'))) return;
+
                 const isSelected = state.selection.includes(l.id);
                 const el = document.createElement('div');
                 el.className = `layer-el ${isSelected ? 'selected' : ''} ${state.selection.length === 1 ? 'single-select' : ''}`;
@@ -3180,9 +3380,15 @@
 
                         if (l.text.includes('|')) {
                             const parts = l.text.split('|');
-                            const left = colorize(parts[0], l.colorSec);
-                            const right = colorize(parts.slice(1).join('|'), l.colorMain);
-                            content.innerHTML = `${left}<span style="opacity:0.3; margin:0 5px">|</span>${right}`;
+                            if (l.splitSponsor && (l.id === MASTER_IDS.P1_NAME || l.id === MASTER_IDS.P2_NAME)) {
+                                content.innerHTML = colorize(parts.slice(1).join('|'), l.colorMain);
+                            } else if (l.id === MASTER_IDS.P1_SPONSOR || l.id === MASTER_IDS.P2_SPONSOR) {
+                                content.innerHTML = colorize(parts[0], l.colorMain);
+                            } else {
+                                const left = colorize(parts[0], l.colorSec);
+                                const right = colorize(parts.slice(1).join('|'), l.colorMain);
+                                content.innerHTML = `${left}<span style="opacity:0.3; margin:0 5px">|</span>${right}`;
+                            }
                         } else {
                             content.innerHTML = colorize(l.text, l.colorMain);
                         }
@@ -3352,7 +3558,21 @@
         const _measureCtx = _measureCanvas.getContext('2d');
 
         function autoShrink(l, content) {
-            const text = (l.text || '').replace(/\|/g, ' ').trim() || ' ';
+            let text = (l.text || '').trim() || ' ';
+            
+            if (text.includes('|')) {
+                const parts = text.split('|');
+                if (l.splitSponsor && (l.id === MASTER_IDS.P1_NAME || l.id === MASTER_IDS.P2_NAME)) {
+                    text = parts.slice(1).join('|').trim() || ' ';
+                } else if (l.id === MASTER_IDS.P1_SPONSOR || l.id === MASTER_IDS.P2_SPONSOR) {
+                    text = parts[0].trim() || ' ';
+                } else {
+                    text = text.replace(/\|/g, ' ').trim() || ' ';
+                }
+            } else {
+                text = text.replace(/\|/g, ' ').trim() || ' ';
+            }
+
             const fontFamily = l.fontFamily || 'Bebas Neue';
             let size = l.fontSize;
             // Bajar hasta que quepa en ancho Y alto
@@ -3524,6 +3744,17 @@
                 document.getElementById('label-l').style.color = l.colorL || l.colorSec;
                 document.getElementById('inp-align').value = l.align;
                 document.getElementById('inp-shadow').checked = l.shadow;
+                
+                const rowSplit = document.getElementById('row-split-sponsor');
+                if (rowSplit) {
+                    if (l.id === MASTER_IDS.P1_NAME || l.id === MASTER_IDS.P2_NAME) {
+                        rowSplit.style.display = 'flex';
+                        document.getElementById('inp-split-sponsor').checked = l.splitSponsor || false;
+                    } else {
+                        rowSplit.style.display = 'none';
+                    }
+                }
+
                 document.getElementById('inp-scaley-num').value = l.textScaleY !== undefined ? l.textScaleY : 100;
                 document.getElementById('inp-scaley-range').value = l.textScaleY !== undefined ? l.textScaleY : 100;
                 document.getElementById('lbl-scaley').textContent = (l.textScaleY !== undefined ? l.textScaleY : 100) + '%';
@@ -3695,51 +3926,144 @@
             dropTarget: null  // { type: 'before'|'after'|'into-folder', refId, refType, folderId }
         };
 
-        function buildVisualList() {
-            // Construir la lista visual tal como se ve en el panel:
-            // mezclar carpetas y capas libres, con sortIndex para posición relativa.
-            // Retorna array de objetos { type: 'layer'|'folder', id, folderId?, data }
+        // ─────────────────────────────────────────────────────────────
+        // SISTEMA DE ORDEN UNIFICADO
+        // La fuente de verdad es state.layers (orden Z, bottom-to-top).
+        // El orden visual de capas libres se deduce directamente de su
+        // posición en state.layers (invertido = top-to-bottom).
+        // Las carpetas se insertan en la lista visual según state.folderOrder:
+        // un array de IDs de "slots raíz" mezclados (capas libres + carpetas)
+        // en orden visual top-to-bottom. Si no existe, se migra desde sortIndex.
+        // ─────────────────────────────────────────────────────────────
+
+        // Asegura que state.folderOrder existe y está sincronizado con state.layers y state.folders
+        function ensureFolderOrder() {
             const layersReversed = [...state.layers].reverse();
             const freeLayers = layersReversed.filter(l => !l.folderId);
-            const folderedLayers = layersReversed.filter(l => l.folderId);
+            const folderIds = new Set(state.folders.map(f => f.id));
 
-            // Asegurar sortIndex en carpetas
-            state.folders.forEach((f, i) => { if (f.sortIndex === undefined) f.sortIndex = i; });
-            const sortedFolders = [...state.folders].sort((a, b) => a.sortIndex - b.sortIndex);
-
-            // Construir lista unificada intercalando por sortIndex
-            const items = [];
-            let freeIdx = 0;
-            let folderIdx = 0;
-
-            // Calcular posiciones: cada carpeta tiene un sortIndex que indica cuántas capas libres van antes
-            // Normalizamos: sortIndex 0 = primera posición, cada incremento de 1 = una posición visual
-            const folderPositions = sortedFolders.map(f => ({ folder: f, pos: f.sortIndex }));
-
-            // Mezclar: recorremos posiciones 0..N e insertamos carpeta o capa libre según corresponda
-            let vPos = 0;
-            while (freeIdx < freeLayers.length || folderIdx < folderPositions.length) {
-                const nextF = folderPositions[folderIdx];
-                if (nextF && nextF.pos <= vPos) {
-                    // Insertar carpeta + sus hijos expandidos
-                    items.push({ type: 'folder', id: nextF.folder.id, data: nextF.folder });
-                    if (!nextF.folder.collapsed) {
-                        const children = folderedLayers.filter(l => l.folderId === nextF.folder.id);
-                        children.forEach(l => items.push({ type: 'layer', id: l.id, folderId: nextF.folder.id, data: l }));
+            if (!state.folderOrder || state.folderOrder.length === 0) {
+                // Migrar desde sortIndex si existe
+                state.folders.forEach((f, i) => { if (f.sortIndex === undefined) f.sortIndex = i * 10; });
+                const sortedFolders = [...state.folders].sort((a, b) => a.sortIndex - b.sortIndex);
+                const order = [];
+                let freeIdx = 0;
+                for (const folder of sortedFolders) {
+                    const freeBefore = Math.round(folder.sortIndex);
+                    while (freeIdx < freeLayers.length && freeIdx < freeBefore) {
+                        order.push(freeLayers[freeIdx].id);
+                        freeIdx++;
                     }
-                    folderIdx++;
-                } else if (freeIdx < freeLayers.length) {
-                    items.push({ type: 'layer', id: freeLayers[freeIdx].id, data: freeLayers[freeIdx] });
+                    order.push(folder.id);
+                }
+                while (freeIdx < freeLayers.length) {
+                    order.push(freeLayers[freeIdx].id);
                     freeIdx++;
-                    vPos++;
-                } else {
-                    // Solo quedan carpetas
-                    items.push({ type: 'folder', id: nextF.folder.id, data: nextF.folder });
-                    if (!nextF.folder.collapsed) {
-                        const children = folderedLayers.filter(l => l.folderId === nextF.folder.id);
-                        children.forEach(l => items.push({ type: 'layer', id: l.id, folderId: nextF.folder.id, data: l }));
+                }
+                state.folderOrder = order;
+            }
+
+            // Quitar entradas que ya no existen (capas eliminadas o metidas en carpeta)
+            const freeIds = new Set(freeLayers.map(l => l.id));
+            state.folderOrder = state.folderOrder.filter(id => freeIds.has(id) || folderIds.has(id));
+
+            // Añadir carpetas que faltan al final
+            for (const f of state.folders) {
+                if (!state.folderOrder.includes(f.id)) state.folderOrder.push(f.id);
+            }
+
+            // Añadir capas libres que faltan en su posición relativa correcta.
+            // Nos basamos en el orden de freeLayers (= orden visual real de state.layers).
+            // Para cada capa libre que no está en folderOrder, la insertamos justo
+            // antes de la siguiente capa libre que sí esté en folderOrder.
+            const missingFree = freeLayers.filter(l => !state.folderOrder.includes(l.id));
+            for (const missing of missingFree) {
+                const missingIdx = freeLayers.indexOf(missing);
+                // Buscar la siguiente capa libre (en freeLayers) que ya esté en folderOrder
+                let insertBeforeId = null;
+                for (let i = missingIdx + 1; i < freeLayers.length; i++) {
+                    if (state.folderOrder.includes(freeLayers[i].id)) {
+                        insertBeforeId = freeLayers[i].id;
+                        break;
                     }
-                    folderIdx++;
+                }
+                if (insertBeforeId) {
+                    const pos = state.folderOrder.indexOf(insertBeforeId);
+                    state.folderOrder.splice(pos, 0, missing.id);
+                } else {
+                    state.folderOrder.push(missing.id);
+                }
+            }
+        }
+
+        // Construye la lista de rootSlots en orden visual a partir de state.folderOrder
+        function buildRootSlots() {
+            ensureFolderOrder();
+            const layersReversed = [...state.layers].reverse();
+            const folderedLayers = layersReversed.filter(l => l.folderId);
+            const folderIds = new Set(state.folders.map(f => f.id));
+            const freeLayerMap = {};
+            layersReversed.filter(l => !l.folderId).forEach(l => { freeLayerMap[l.id] = l; });
+            const folderMap = {};
+            state.folders.forEach(f => { folderMap[f.id] = f; });
+
+            const slots = [];
+            for (const id of state.folderOrder) {
+                if (freeLayerMap[id]) {
+                    slots.push({ type: 'layer', id, data: freeLayerMap[id] });
+                } else if (folderMap[id]) {
+                    slots.push({ type: 'folder', id, data: folderMap[id] });
+                }
+            }
+            return slots;
+        }
+
+        // Aplica una lista de rootSlots reordenada: actualiza state.folderOrder y state.layers
+        function applyRootSlots(newRootSlots) {
+            // Actualizar folderOrder
+            state.folderOrder = newRootSlots.map(s => s.id);
+
+            // Reconstruir state.layers (bottom-to-top) a partir del orden visual (top-to-bottom)
+            const layersReversed = [...state.layers].reverse();
+            const folderedLayers = layersReversed.filter(l => l.folderId);
+            const newZOrder = [];
+            for (const slot of newRootSlots) {
+                if (slot.type === 'layer') {
+                    newZOrder.push(slot.data);
+                } else if (slot.type === 'folder') {
+                    const children = folderedLayers.filter(l => l.folderId === slot.id);
+                    newZOrder.push(...children);
+                }
+            }
+            state.layers = newZOrder.reverse();
+        }
+
+        function buildVisualList() {
+            // Retorna array de objetos { type: 'layer'|'folder', id, folderId?, data }
+            const p1Layer = state.layers.find(ly => ly.id === MASTER_IDS.P1_NAME);
+            const p2Layer = state.layers.find(ly => ly.id === MASTER_IDS.P2_NAME);
+
+            // IDs de capas que no deben mostrarse (filtro visual únicamente)
+            const hiddenIds = new Set();
+            state.layers.forEach(l => {
+                if ((l.id === MASTER_IDS.TOURNAMENT_NAME || l.id === MASTER_IDS.FT) && (!l.text || l.text.trim() === '')) hiddenIds.add(l.id);
+                if (l.id === MASTER_IDS.P1_SPONSOR && (!p1Layer || !p1Layer.splitSponsor || !l.text.includes('|'))) hiddenIds.add(l.id);
+                if (l.id === MASTER_IDS.P2_SPONSOR && (!p2Layer || !p2Layer.splitSponsor || !l.text.includes('|'))) hiddenIds.add(l.id);
+            });
+
+            // folderedLayers se construye desde TODAS las capas (sin filtro visual)
+            const allLayersReversed = [...state.layers].reverse();
+            const folderedLayers = allLayersReversed.filter(l => l.folderId);
+
+            const rootSlots = buildRootSlots();
+            const items = [];
+            for (const slot of rootSlots) {
+                if (slot.type === 'layer' && hiddenIds.has(slot.id)) continue;
+                items.push(slot);
+                if (slot.type === 'folder' && !slot.data.collapsed) {
+                    folderedLayers
+                        .filter(l => l.folderId === slot.id && !hiddenIds.has(l.id))
+                        .forEach(l => items.push({ type: 'layer', id: l.id, folderId: slot.id, data: l }));
                 }
             }
             return items;
@@ -3787,7 +4111,7 @@
                 }
 
                 // Calcular posición de drop
-                updateDropTarget(ev.clientY);
+                updateDropTarget(ev.clientY, ev.clientX);
             };
 
             const onUp = (ev) => {
@@ -3813,7 +4137,7 @@
             window.addEventListener('pointerup', onUp);
         }
 
-        function updateDropTarget(clientY) {
+        function updateDropTarget(clientY, clientX) {
             const list = document.getElementById('layers-list');
             const listRect = list.getBoundingClientRect();
             const items = Array.from(list.querySelectorAll('[data-item-id]'));
@@ -3872,8 +4196,23 @@
                 bestY = lastRect.bottom - listRect.top + list.scrollTop - 1;
                 const lastId = items[items.length - 1].dataset.itemId;
                 const lastType = items[items.length - 1].dataset.itemType;
-                const lastFolder = items[items.length - 1].dataset.folderId || null;
+                let lastFolder = items[items.length - 1].dataset.folderId || null;
+                
+                // Si arrastramos muy abajo o a la izquierda, forzamos sacarlo de cualquier carpeta
+                if (clientY > lastRect.bottom + 15 || (clientX !== undefined && clientX < listRect.left + 35)) {
+                    lastFolder = null;
+                }
+                
                 bestTarget = { type: 'after', refId: lastId, refType: lastType, folderId: lastFolder };
+            }
+
+            // Evaluación global para sacar capas de carpetas si arrastramos hacia la izquierda
+            if (bestTarget && bestTarget.type !== 'into-folder') {
+                if (clientX !== undefined && clientX < listRect.left + 35) {
+                    if (panelDrag.type === 'layer') {
+                        bestTarget.folderId = null;
+                    }
+                }
             }
 
             panelDrag.dropTarget = bestTarget;
@@ -3911,14 +4250,16 @@
         function executeLayerDrop(dt) {
             const toMove = panelDrag.sourceIds.slice();
 
+            // ── Caso 1: soltar DENTRO de una carpeta ──
             if (dt.type === 'into-folder') {
-                // Mover capas dentro de la carpeta
                 const folder = state.folders.find(f => f.id === dt.folderId);
                 if (!folder) return;
                 toMove.forEach(id => {
                     const layer = state.layers.find(l => l.id === id);
                     if (layer) layer.folderId = dt.folderId;
                 });
+                // Eliminar las capas que entraron a la carpeta de folderOrder (ya no son slots raíz)
+                state.folderOrder = state.folderOrder.filter(id => !toMove.includes(id));
                 folder.collapsed = false;
                 saveState();
                 render();
@@ -3926,76 +4267,60 @@
                 return;
             }
 
-            // Determinar folderId del destino (heredar del item de referencia)
-            const refItem = dt.refType === 'folder' ? null : state.layers.find(l => l.id === dt.refId);
-            const newFolderId = refItem ? refItem.folderId : null;
-
-            // Si se suelta junto a una carpeta (no dentro), sacar de carpeta
-            if (dt.refType === 'folder' && dt.type === 'before') {
-                // Soltar antes de una carpeta = quitar de cualquier carpeta
-                toMove.forEach(id => {
-                    const layer = state.layers.find(l => l.id === id);
-                    if (layer) delete layer.folderId;
-                });
-            } else if (dt.refType === 'folder' && dt.type === 'after') {
-                // Soltar después de una carpeta: si la carpeta está expandida,
-                // meter en la carpeta; si cerrada, soltar como capa libre después
-                const folder = state.folders.find(f => f.id === dt.refId);
-                if (folder && !folder.collapsed) {
-                    toMove.forEach(id => {
-                        const layer = state.layers.find(l => l.id === id);
-                        if (layer) layer.folderId = dt.refId;
-                    });
+            // ── Actualizar folderId de las capas arrastradas ──
+            // Determinar si el destino mete en carpeta o saca de ella
+            if (dt.refType === 'folder') {
+                if (dt.type === 'before') {
+                    // Antes de una carpeta = capa libre
+                    toMove.forEach(id => { const l = state.layers.find(x => x.id === id); if (l) delete l.folderId; });
                 } else {
-                    toMove.forEach(id => {
-                        const layer = state.layers.find(l => l.id === id);
-                        if (layer) delete layer.folderId;
-                    });
+                    // Después de una carpeta cerrada = capa libre; abierta = dentro de la carpeta
+                    const folder = state.folders.find(f => f.id === dt.refId);
+                    if (folder && !folder.collapsed) {
+                        toMove.forEach(id => { const l = state.layers.find(x => x.id === id); if (l) l.folderId = dt.refId; });
+                        // Si entran a la carpeta, quitarlas de folderOrder y terminar
+                        state.folderOrder = state.folderOrder.filter(id => !toMove.includes(id));
+                        saveState(); render(); return;
+                    } else {
+                        toMove.forEach(id => { const l = state.layers.find(x => x.id === id); if (l) delete l.folderId; });
+                    }
                 }
             } else {
-                // Adoptar el folderId del destino
+                // Referencia es otra capa: heredar su folderId (o ninguno si dt.folderId es null)
+                const newFolderId = dt.folderId !== undefined ? dt.folderId : (() => {
+                    const ref = state.layers.find(l => l.id === dt.refId);
+                    return ref ? ref.folderId : null;
+                })();
                 toMove.forEach(id => {
                     const layer = state.layers.find(l => l.id === id);
-                    if (layer) {
-                        if (newFolderId) layer.folderId = newFolderId;
-                        else delete layer.folderId;
-                    }
+                    if (!layer) return;
+                    if (newFolderId) layer.folderId = newFolderId;
+                    else delete layer.folderId;
                 });
-            }
-
-            // 2. Construir árbol visual plano (incluye todo, sin importar si colapsado)
-            // (Simulación de lo que renderiza pantalla, top-to-bottom)
-            const layersReversed = [...state.layers].reverse();
-            const freeLayers = layersReversed.filter(l => !l.folderId);
-            const folderedLayers = layersReversed.filter(l => !!l.folderId);
-            
-            state.folders.forEach((f, i) => { if (f.sortIndex === undefined) f.sortIndex = i; });
-            const sortedFolders = [...state.folders].sort((a, b) => a.sortIndex - b.sortIndex);
-
-            const tree = [];
-            let freeIdx = 0; let folderIdx = 0;
-            let vPosCalc = 0;
-            const folderPositions = sortedFolders.map(f => ({ folder: f, pos: f.sortIndex }));
-
-            while (freeIdx < freeLayers.length || folderIdx < folderPositions.length) {
-                const nextF = folderPositions[folderIdx];
-                if (nextF && nextF.pos <= vPosCalc) {
-                    tree.push({ type: 'folder', id: nextF.folder.id, data: nextF.folder });
-                    const children = folderedLayers.filter(l => l.folderId === nextF.folder.id);
-                    children.forEach(l => tree.push({ type: 'layer', id: l.id, folderId: nextF.folder.id, data: l }));
-                    folderIdx++;
-                } else if (freeIdx < freeLayers.length) {
-                    tree.push({ type: 'layer', id: freeLayers[freeIdx].id, data: freeLayers[freeIdx] });
-                    freeIdx++; vPosCalc++;
-                } else {
-                    tree.push({ type: 'folder', id: nextF.folder.id, data: nextF.folder });
-                    const children = folderedLayers.filter(l => l.folderId === nextF.folder.id);
-                    children.forEach(l => tree.push({ type: 'layer', id: l.id, folderId: nextF.folder.id, data: l }));
-                    folderIdx++;
+                // Si quedaron dentro de una carpeta, no son slots raíz → salir
+                if (newFolderId) {
+                    state.folderOrder = state.folderOrder.filter(id => !toMove.includes(id));
+                    saveState(); render(); return;
                 }
             }
 
-            // 3. Extraer los items arrastrados del árbol
+            // ── A partir de aquí las capas son libres (slots raíz) ──
+            // Asegurarnos que están en folderOrder (las que acaban de salir de carpeta no lo estaban)
+            ensureFolderOrder();
+
+            // Construir tree expandido a partir de rootSlots (sistema nuevo, correcto)
+            const rootSlots = buildRootSlots();
+            const folderedLayers = [...state.layers].reverse().filter(l => l.folderId);
+            const tree = [];
+            for (const slot of rootSlots) {
+                tree.push(slot);
+                if (slot.type === 'folder') {
+                    folderedLayers.filter(l => l.folderId === slot.id)
+                        .forEach(l => tree.push({ type: 'layer', id: l.id, folderId: slot.id, data: l }));
+                }
+            }
+
+            // Extraer las capas arrastradas del tree
             const movingItems = [];
             for (let i = tree.length - 1; i >= 0; i--) {
                 if (tree[i].type === 'layer' && toMove.includes(tree[i].id)) {
@@ -4003,53 +4328,43 @@
                 }
             }
 
-            // 4. Encontrar index de referencia e insertar
-            const targetIdx = tree.findIndex(item => item.type === dt.refType && item.id === dt.refId);
-            if (targetIdx !== -1) {
+            // Encontrar posición de referencia e insertar
+            let targetIdx = tree.findIndex(item => item.type === dt.refType && item.id === dt.refId);
+            if (targetIdx === -1) {
+                tree.push(...movingItems);
+            } else {
                 let insertIdx = targetIdx;
-                if (dt.type === 'into-folder') {
-                    insertIdx = targetIdx + 1;
-                } else if (dt.type === 'after') {
+                if (dt.type === 'after') {
+                    // Saltar hijos de carpeta si el target es una carpeta cerrada
                     if (dt.refType === 'folder') {
-                        const folder = state.folders.find(f => f.id === dt.refId);
-                        if (folder && !folder.collapsed) {
-                            insertIdx = targetIdx + 1;
-                        } else {
-                            let skip = 0;
-                            while (tree[targetIdx + 1 + skip] && tree[targetIdx + 1 + skip].folderId === dt.refId) skip++;
-                            insertIdx = targetIdx + 1 + skip;
-                        }
+                        let skip = 0;
+                        while (tree[targetIdx + 1 + skip] && tree[targetIdx + 1 + skip].folderId === dt.refId) skip++;
+                        insertIdx = targetIdx + 1 + skip;
                     } else {
                         insertIdx = targetIdx + 1;
                     }
                 }
-                tree.splice(insertIdx, 0, ...movingItems);
-            } else {
-                tree.push(...movingItems);
-            }
-
-            // 5. Reconstruir state.layers y actualizar sortIndex
-            const newZOrderLayers = [];
-            let currentVPos = 0;
-            let folderCounter = 0;
-
-            for (let i = 0; i < tree.length; i++) {
-                const item = tree[i];
-                if (item.type === 'layer') {
-                    newZOrderLayers.push(item.data);
-                    if (!item.data.folderId) {
-                        currentVPos++;
-                        folderCounter = 0;
+                // Si la referencia está dentro de una carpeta pero queremos soltar fuera,
+                // ajustar para insertar antes/después de la carpeta contenedora
+                const refItem = tree[targetIdx];
+                if (refItem && refItem.folderId && dt.folderId === null) {
+                    const parentFolderId = refItem.folderId;
+                    if (dt.type === 'before') {
+                        let back = targetIdx;
+                        while (back >= 0 && !(tree[back].type === 'folder' && tree[back].id === parentFolderId)) back--;
+                        insertIdx = back >= 0 ? back : targetIdx;
+                    } else {
+                        let skip = 0;
+                        while (tree[targetIdx + 1 + skip] && tree[targetIdx + 1 + skip].folderId === parentFolderId) skip++;
+                        insertIdx = targetIdx + 1 + skip;
                     }
-                } else if (item.type === 'folder') {
-                    folderCounter++;
-                    if (currentVPos === 0) item.data.sortIndex = -1 + (folderCounter * 0.001);
-                    else item.data.sortIndex = (currentVPos - 1) + (folderCounter * 0.001);
                 }
+                tree.splice(insertIdx, 0, ...movingItems);
             }
 
-            state.layers = newZOrderLayers.reverse();
-
+            // Filtrar solo los slots raíz (sin hijos de carpeta) y aplicar
+            const newRootSlots = tree.filter(item => !item.folderId || item.type === 'folder');
+            applyRootSlots(newRootSlots);
             saveState();
             render();
         }
@@ -4057,84 +4372,34 @@
         function executeFolderDrop(dt) {
             const draggedFolder = state.folders.find(f => f.id === panelDrag.sourceId);
             if (!draggedFolder) return;
+            if (dt.type === 'into-folder') return; // No anidar carpetas
 
-            if (dt.type === 'into-folder') return; // No anidar carpetas dentro de carpetas
+            // Obtener la lista de rootSlots actual
+            const rootSlots = buildRootSlots();
 
-            // Construir lista plana de (capas libres + carpetas) ordenada como se ve en pantalla
-            const layersReversed = [...state.layers].reverse();
-            const freeLayers = layersReversed.filter(l => !l.folderId);
-            
-            // Ordenar carpetas temporalmente con su sortIndex actual
-            state.folders.forEach((f, i) => { if (f.sortIndex === undefined) f.sortIndex = i; });
-            const sortedFolders = [...state.folders].sort((a, b) => a.sortIndex - b.sortIndex);
+            // Sacar carpeta arrastrada
+            const draggedIdx = rootSlots.findIndex(item => item.type === 'folder' && item.id === draggedFolder.id);
+            if (draggedIdx !== -1) rootSlots.splice(draggedIdx, 1);
 
-            // Representamos todos los objetos raíz en una lista unificada
-            const topLevelItems = [];
-            let freeIdx = 0;
-            let folderIdx = 0;
-            const folderPositions = sortedFolders.map(f => ({ folder: f, pos: f.sortIndex }));
+            // Encontrar posición destino
+            let targetIdx = rootSlots.findIndex(item => item.type === dt.refType && item.id === dt.refId);
 
-            let vPos = 0;
-            while (freeIdx < freeLayers.length || folderIdx < folderPositions.length) {
-                const nextF = folderPositions[folderIdx];
-                if (nextF && nextF.pos <= vPos) {
-                    topLevelItems.push({ type: 'folder', id: nextF.folder.id, ref: nextF.folder });
-                    folderIdx++;
-                } else if (freeIdx < freeLayers.length) {
-                    topLevelItems.push({ type: 'layer', id: freeLayers[freeIdx].id, ref: freeLayers[freeIdx] });
-                    freeIdx++;
-                    vPos++;
-                } else {
-                    topLevelItems.push({ type: 'folder', id: nextF.folder.id, ref: nextF.folder });
-                    folderIdx++;
+            // Si el target es una capa dentro de una carpeta, usar su carpeta padre como referencia
+            if (targetIdx === -1 && dt.refType === 'layer') {
+                const targetLayer = state.layers.find(l => l.id === dt.refId);
+                if (targetLayer && targetLayer.folderId) {
+                    targetIdx = rootSlots.findIndex(item => item.type === 'folder' && item.id === targetLayer.folderId);
                 }
             }
 
-            // Sacar el draggedFolder de su posición actual
-            const draggedIdx = topLevelItems.findIndex(item => item.type === 'folder' && item.id === draggedFolder.id);
-            if (draggedIdx !== -1) topLevelItems.splice(draggedIdx, 1);
-
-            // Encontrar la posición donde se soltó
-            const targetIdx = topLevelItems.findIndex(item => item.type === dt.refType && item.id === dt.refId);
             if (targetIdx !== -1) {
                 const insertIdx = dt.type === 'before' ? targetIdx : targetIdx + 1;
-                topLevelItems.splice(insertIdx, 0, { type: 'folder', id: draggedFolder.id, ref: draggedFolder });
+                rootSlots.splice(insertIdx, 0, { type: 'folder', id: draggedFolder.id, data: draggedFolder });
             } else {
-                // Fallback si no encuentra el target (lo manda al final)
-                topLevelItems.push({ type: 'folder', id: draggedFolder.id, ref: draggedFolder });
+                rootSlots.push({ type: 'folder', id: draggedFolder.id, data: draggedFolder });
             }
 
-            // Reasignar sortIndex a TODAS las carpetas según este nuevo arreglo visual:
-            // Intercalar los sortIndex correctamente basándose en los freeLayers que van delante
-            let currentVPos = 0;
-            let folderCounter = 0;
-            const newZOrderLayers = [];
-            
-            for (let i = 0; i < topLevelItems.length; i++) {
-                const item = topLevelItems[i];
-                if (item.type === 'layer') {
-                    currentVPos++;
-                    folderCounter = 0;
-                    newZOrderLayers.push(item.ref);
-                } else if (item.type === 'folder') {
-                    folderCounter++;
-                    // Utilizamos valores decimales para preservar el orden entre carpetas adyacentes
-                    if (currentVPos === 0) {
-                        item.ref.sortIndex = -1 + (folderCounter * 0.001);
-                    } else {
-                        item.ref.sortIndex = (currentVPos - 1) + (folderCounter * 0.001);
-                    }
-                    // Mover todos los hijos de la carpeta juntos en este lugar de la jerarquía visual
-                    const children = layersReversed.filter(l => l.folderId === item.id);
-                    newZOrderLayers.push(...children);
-                }
-            }
-
-            // Sincronizar reordenamiento Z-index de TODAS las capas:
-            // newZOrderLayers está en orden visual (Top-to-Bottom). 
-            // Invertimos para restaurar orden Bottom-to-Top de state.layers
-            state.layers = newZOrderLayers.reverse();
-
+            applyRootSlots(rootSlots);
             saveState();
             render();
         }
@@ -4202,6 +4467,8 @@
             if (l.id === MASTER_IDS.TOURNAMENT_NAME) label = l.text || 'Nombre del torneo';
             if (l.id === MASTER_IDS.P1_NAME) label = "👑 " + (l.text || 'Player 1');
             if (l.id === MASTER_IDS.P2_NAME) label = "👑 " + (l.text || 'Player 2');
+            if (l.id === MASTER_IDS.P1_SPONSOR) label = "Sponsor P1";
+            if (l.id === MASTER_IDS.P2_SPONSOR) label = "Sponsor P2";
             if (l.id === MASTER_IDS.P1_FLAG) label = "Bandera P1";
             if (l.id === MASTER_IDS.P2_FLAG) label = "Bandera P2";
             if (l.id === MASTER_IDS.P1_SHIELD) label = "Escudo P1";
@@ -4362,9 +4629,7 @@
 
         function createFolder() {
             const id = 'folder_' + Date.now();
-            // sortIndex: nueva carpeta va al principio (máximo actual + 2)
-            const maxIdx = state.folders.reduce((m, f) => Math.max(m, f.sortIndex || 0), -2);
-            const folder = { id, name: 'Nueva Carpeta', collapsed: false, sortIndex: maxIdx + 2 };
+            const folder = { id, name: 'Nueva Carpeta', collapsed: false };
             state.folders.push(folder);
 
             // Si hay capas seleccionadas, meterlas en la carpeta automáticamente
@@ -4375,6 +4640,10 @@
                 });
                 folder.collapsed = false;
             }
+
+            // Añadir la carpeta al final de folderOrder (ensureFolderOrder la agregará si falta)
+            ensureFolderOrder();
+            // Ya fue agregada por ensureFolderOrder al final; no hace falta más.
 
             saveState();
             render();
@@ -4414,7 +4683,11 @@
             if (e) e.stopPropagation();
             const layer = state.layers.find(l => l.id === layerId);
             if (!layer) return;
+            const oldFolderId = layer.folderId;
             delete layer.folderId;
+            // Insertar en folderOrder justo donde está la carpeta de origen
+            ensureFolderOrder();
+            // Si aún no está (ensureFolderOrder ya lo habrá añadido al final correctamente)
             saveState();
             render();
         }
@@ -4426,8 +4699,11 @@
                 if (!folder) return;
                 // Sacar las capas de la carpeta (no las elimina, solo las libera)
                 state.layers.forEach(l => { if (l.folderId === state.selectedFolderId) delete l.folderId; });
+                // Quitar la carpeta de folderOrder
+                state.folderOrder = (state.folderOrder || []).filter(id => id !== state.selectedFolderId);
                 state.folders = state.folders.filter(f => f.id !== state.selectedFolderId);
                 state.selectedFolderId = null;
+                // ensureFolderOrder reinsertará las capas liberadas en sus posiciones correctas
                 saveState();
                 render();
                 showToast("Carpeta eliminada (capas liberadas)");
@@ -4639,9 +4915,20 @@
 
         async function exportConfig() {
             try {
+                // Sincronizar pestaña activa al array antes de exportar
+                const active = state.tabs.find(t => t.id === state.activeTabId);
+                if (active) {
+                    active.layers = JSON.parse(JSON.stringify(state.layers));
+                    active.folders = JSON.parse(JSON.stringify(state.folders));
+                    active.folderOrder = JSON.parse(JSON.stringify(state.folderOrder || []));
+                    active.guides = JSON.parse(JSON.stringify(state.guides));
+                    active.history = state.history;
+                    active.historyStep = state.historyStep;
+                }
+
                 const outData = {
-                    layers: state.layers,
-                    folders: state.folders,
+                    tabs: state.tabs,
+                    activeTabId: state.activeTabId,
                     settings: {
                         format: state.format,
                         linked: state.linked
@@ -4704,19 +4991,47 @@
                     const contents = e.target.result;
                     const d = JSON.parse(contents);
 
-                    if (Array.isArray(d)) {
-                        state.layers = d;
-                    } else if (d.layers && Array.isArray(d.layers)) {
-                        state.layers = d.layers;
-                        state.folders = Array.isArray(d.folders) ? d.folders : [];
+                    if (d && d.tabs && Array.isArray(d.tabs)) {
+                        state.tabs = d.tabs;
+                        state.activeTabId = d.activeTabId || d.tabs[0].id;
                         if (d.settings) {
                             state.format = d.settings.format || 'FT';
                             state.linked = d.settings.linked !== undefined ? d.settings.linked : true;
                         }
+                        const active = state.tabs.find(t => t.id === state.activeTabId);
+                        if (active) {
+                            state.layers = JSON.parse(JSON.stringify(active.layers));
+                            state.folders = JSON.parse(JSON.stringify(active.folders));
+                            state.folderOrder = JSON.parse(JSON.stringify(active.folderOrder || []));
+                            state.guides = JSON.parse(JSON.stringify(active.guides || []));
+                            state.history = active.history || [];
+                            state.historyStep = active.historyStep !== undefined ? active.historyStep : -1;
+                        }
+                        renderTabs();
                     } else {
-                        state.layers = Object.values(d);
+                        // Formato antiguo: migrar a una pestaña principal
+                        let oldLayers = Array.isArray(d) ? d : (d.layers || Object.values(d));
+                        let oldFolders = d.folders || [];
+                        if (d.settings) {
+                            state.format = d.settings.format || 'FT';
+                            state.linked = d.settings.linked !== undefined ? d.settings.linked : true;
+                        }
+                        
+                        state.tabs = [{
+                            id: 'tab_legacy_' + Date.now(),
+                            name: 'Principal',
+                            layers: oldLayers,
+                            folders: oldFolders,
+                            guides: [],
+                            history: [],
+                            historyStep: -1
+                        }];
+                        state.activeTabId = state.tabs[0].id;
+                        state.layers = JSON.parse(JSON.stringify(oldLayers));
+                        state.folders = JSON.parse(JSON.stringify(oldFolders));
+                        state.guides = [];
+                        if (typeof renderTabs === 'function') renderTabs();
                     }
-
                     state.selection = [];
                     ensureMasterLayers();
                     saveState(); // Guardar carga externa
@@ -5267,51 +5582,285 @@
                 r.readAsDataURL(f);
             });
         }
+        function createNewTab(copyCurrent = false) {
+            const id = 'tab_' + Date.now();
+            const idx = state.tabs.length + 1;
+            const name = copyCurrent ? `Pestaña ${idx} (Copia)` : `Pestaña ${idx}`;
+            
+            const prevTab = state.tabs.find(t => t.id === state.activeTabId);
+            if (prevTab) {
+                // Guardar antes de clonar
+                prevTab.layers = JSON.parse(JSON.stringify(state.layers));
+                prevTab.folders = JSON.parse(JSON.stringify(state.folders));
+                prevTab.folderOrder = JSON.parse(JSON.stringify(state.folderOrder || []));
+                prevTab.guides = JSON.parse(JSON.stringify(state.guides));
+                prevTab.history = state.history;
+                prevTab.historyStep = state.historyStep;
+            }
+
+            const tab = {
+                id,
+                name,
+                layers: copyCurrent ? JSON.parse(JSON.stringify(state.layers)) : [],
+                folders: copyCurrent ? JSON.parse(JSON.stringify(state.folders)) : [],
+                guides: copyCurrent ? JSON.parse(JSON.stringify(state.guides)) : [],
+                history: [],
+                historyStep: -1
+            };
+            
+            state.tabs.push(tab);
+            switchTab(id);
+            // Hide add menu if focused
+            document.activeElement.blur();
+        }
+
+        function switchTab(tabId) {
+            if (state.activeTabId === tabId) return;
+
+            // Guardar estado actual a la pestaña saliente
+            const currentTab = state.tabs.find(t => t.id === state.activeTabId);
+            if (currentTab) {
+                currentTab.layers = JSON.parse(JSON.stringify(state.layers));
+                currentTab.folders = JSON.parse(JSON.stringify(state.folders));
+                currentTab.folderOrder = JSON.parse(JSON.stringify(state.folderOrder || []));
+                currentTab.guides = JSON.parse(JSON.stringify(state.guides));
+                currentTab.history = state.history;
+                currentTab.historyStep = state.historyStep;
+            }
+
+            // Cargar nueva pestaña
+            const newTab = state.tabs.find(t => t.id === tabId);
+            if (newTab) {
+                state.activeTabId = tabId;
+                state.layers = JSON.parse(JSON.stringify(newTab.layers || []));
+                state.folders = JSON.parse(JSON.stringify(newTab.folders || []));
+                state.folderOrder = JSON.parse(JSON.stringify(newTab.folderOrder || []));
+                state.guides = JSON.parse(JSON.stringify(newTab.guides || []));
+                state.history = newTab.history || [];
+                state.historyStep = newTab.historyStep !== undefined ? newTab.historyStep : -1;
+                
+                state.selection = [];
+                state.selectedFolderId = null;
+                state.editingLayerId = null;
+
+                ensureMasterLayers(); // Refrescar maestras
+                renderTabs();
+                render();
+                renderGuides();
+                updatePropertiesPanel();
+            }
+        }
+
+        function deleteTab(tabId) {
+            if (state.tabs.length <= 1) {
+                showToast("No puedes eliminar la única pestaña.");
+                return;
+            }
+            state.tabs = state.tabs.filter(t => t.id !== tabId);
+            if (state.activeTabId === tabId) {
+                state.activeTabId = null; // forzar switch
+                switchTab(state.tabs[0].id);
+            } else {
+                renderTabs();
+            }
+            closeTabActionMenu();
+        }
+
+        // --- MANEJO DE MENÚ DE PESTAÑA (RENOMBRAR / ELIMINAR) ---
+        function openTabActionMenu(tabId, anchorEl) {
+            closeTabMenu(); // cerrar menú de añadir si estuviese abierto
+            const menu = document.getElementById('tab-action-menu');
+            const input = document.getElementById('tab-action-name-input');
+            
+            state.actionMenuTabId = tabId;
+            const tab = state.tabs.find(t => t.id === tabId);
+            if (tab) {
+                input.value = tab.name;
+            }
+            
+            anchorEl.appendChild(menu);
+            menu.classList.add('show');
+            setTimeout(() => {
+                input.focus();
+                input.select();
+            }, 50);
+
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commitTabRename();
+                } else if (e.key === 'Escape') {
+                    closeTabActionMenu();
+                }
+            };
+        }
+
+        function closeTabActionMenu() {
+            const menu = document.getElementById('tab-action-menu');
+            if (menu) menu.classList.remove('show');
+            state.actionMenuTabId = null;
+        }
+
+        function commitTabRename() {
+            if (!state.actionMenuTabId) return;
+            const input = document.getElementById('tab-action-name-input');
+            const newName = input.value.trim();
+            if (newName) {
+                const tab = state.tabs.find(t => t.id === state.actionMenuTabId);
+                if (tab) tab.name = newName;
+            }
+            closeTabActionMenu();
+            renderTabs();
+        }
+
+        function commitTabDelete() {
+            // Se invoca desde el menú custom
+            if (state.actionMenuTabId) {
+                deleteTab(state.actionMenuTabId);
+            }
+        }
+
+        function renderTabs() {
+            const container = document.getElementById('tabs-container');
+            if (!container) return;
+
+            // Resguardar el menú de acción en un lugar seguro antes de reconstruir el HTML para que no sea destruido
+            const actionMenu = document.getElementById('tab-action-menu');
+            if (actionMenu && container.contains(actionMenu)) {
+                actionMenu.classList.remove('show');
+                document.body.appendChild(actionMenu);
+            }
+
+            container.innerHTML = '';
+            
+            state.tabs.forEach((tab, index) => {
+                const isActive = tab.id === state.activeTabId;
+                
+                // Wrapper para que el position:absolute del menú se ancle a esta pestaña
+                const wrap = document.createElement('div');
+                wrap.style.position = 'relative';
+                wrap.style.width = '100%';
+                wrap.style.display = 'flex';
+                wrap.style.justifyContent = 'center';
+
+                const el = document.createElement('div');
+                el.className = `prop-tool-btn ${isActive ? 'active' : ''}`;
+                el.title = `${tab.name}\n\nClic derecho o Doble clic: Opciones`;
+                el.style.fontSize = '16px';
+                el.style.fontWeight = 'bold';
+                el.style.margin = '0';
+                el.style.fontFamily = 'monospace';
+                
+                el.innerHTML = `<span>${index + 1}</span>`;
+                
+                el.onclick = () => switchTab(tab.id);
+                
+                const showMenu = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openTabActionMenu(tab.id, wrap);
+                };
+
+                el.ondblclick = showMenu;
+                el.oncontextmenu = showMenu;
+                
+                wrap.appendChild(el);
+                container.appendChild(wrap);
+            });
+        }
+
         function loadAutosave() {
             try {
                 const s = localStorage.getItem('fgc_pro_save');
                 if (s) {
                     const parsed = JSON.parse(s);
-                    if (Array.isArray(parsed)) {
-                        state.layers = parsed;
-                    } else if (parsed && parsed.layers && Array.isArray(parsed.layers)) {
-                        state.layers = parsed.layers;
-                        state.folders = Array.isArray(parsed.folders) ? parsed.folders : [];
+                    if (parsed && parsed.tabs && Array.isArray(parsed.tabs)) {
+                        state.tabs = parsed.tabs;
+                        state.activeTabId = parsed.activeTabId || parsed.tabs[0].id;
                         if (parsed.settings) {
                             state.format = parsed.settings.format || 'FT';
                             state.linked = parsed.settings.linked !== undefined ? parsed.settings.linked : true;
                         }
+                        const active = state.tabs.find(t => t.id === state.activeTabId);
+                        if (active) {
+                            state.layers = JSON.parse(JSON.stringify(active.layers));
+                            state.folders = JSON.parse(JSON.stringify(active.folders));
+                            state.folderOrder = JSON.parse(JSON.stringify(active.folderOrder || []));
+                            state.guides = JSON.parse(JSON.stringify(active.guides || []));
+                            state.history = active.history || [];
+                            state.historyStep = active.historyStep !== undefined ? active.historyStep : -1;
+                        }
                     } else {
-                        state.layers = Object.values(parsed);
+                        // Migración de formato antiguo
+                        let oldLayers = Array.isArray(parsed) ? parsed : (parsed.layers || Object.values(parsed));
+                        let oldFolders = parsed.folders || [];
+                        if (parsed.settings) {
+                            state.format = parsed.settings.format || 'FT';
+                            state.linked = parsed.settings.linked !== undefined ? parsed.settings.linked : true;
+                        }
+                        
+                        let oldGuides = [];
+                        try {
+                            const gs = localStorage.getItem('fgc_guides');
+                            if (gs) oldGuides = JSON.parse(gs).guides || [];
+                        } catch(e){}
+
+                        state.tabs = [{
+                            id: 'tab_legacy_' + Date.now(),
+                            name: 'Principal',
+                            layers: oldLayers,
+                            folders: oldFolders,
+                            guides: oldGuides,
+                            history: [],
+                            historyStep: -1
+                        }];
+                        state.activeTabId = state.tabs[0].id;
+                        state.layers = JSON.parse(JSON.stringify(oldLayers));
+                        state.folders = JSON.parse(JSON.stringify(oldFolders));
+                        state.guides = JSON.parse(JSON.stringify(oldGuides));
                     }
                     
                     if (state.layers) {
-                        // Corregir transitionTarget incorrecto en capas de bandera
                         state.layers.forEach(l => {
                             if (l.transitionEnabled) {
-                                if (l.id === MASTER_IDS.P1_FLAG && l.transitionTarget !== MASTER_IDS.P1_SHIELD) {
-                                    l.transitionTarget = MASTER_IDS.P1_SHIELD;
-                                }
-                                if (l.id === MASTER_IDS.P2_FLAG && l.transitionTarget !== MASTER_IDS.P2_SHIELD) {
-                                    l.transitionTarget = MASTER_IDS.P2_SHIELD;
-                                }
+                                if (l.id === MASTER_IDS.P1_FLAG && l.transitionTarget !== MASTER_IDS.P1_SHIELD) l.transitionTarget = MASTER_IDS.P1_SHIELD;
+                                if (l.id === MASTER_IDS.P2_FLAG && l.transitionTarget !== MASTER_IDS.P2_SHIELD) l.transitionTarget = MASTER_IDS.P2_SHIELD;
                             }
-                            // Limpiar transiciones heredadas accidentalmente en slots de red social extra
-                            if ([
-                                MASTER_IDS.P1_SOCIAL_2, MASTER_IDS.P1_SOCIAL_3,
-                                MASTER_IDS.P2_SOCIAL_2, MASTER_IDS.P2_SOCIAL_3
-                            ].includes(l.id)) {
+                            if ([MASTER_IDS.P1_SOCIAL_2, MASTER_IDS.P1_SOCIAL_3, MASTER_IDS.P2_SOCIAL_2, MASTER_IDS.P2_SOCIAL_3].includes(l.id)) {
                                 l.transitionEnabled = false;
                                 l.transitionTarget  = '';
                                 delete l._childOriginal;
                             }
                         });
                     }
-                    else { console.warn('fgc_pro_save no era un array, ignorando.'); localStorage.removeItem('fgc_pro_save'); }
+                } else {
+                    // Inicializar si no hay save
+                    createNewTab(false);
                 }
-            } catch (e) { console.warn('Error leyendo autosave, ignorando.', e); localStorage.removeItem('fgc_pro_save'); }
+            } catch (e) {
+                console.warn('Error leyendo autosave, creando init default.');
+                if(state.tabs.length === 0) createNewTab(false);
+            }
+            renderTabs();
         }
-        setInterval(() => localStorage.setItem('fgc_pro_save', JSON.stringify({ layers: state.layers, folders: state.folders })), 5000);
+        
+        setInterval(() => {
+            // Sincronizar active tab con current state antes de guardar
+            const active = state.tabs.find(t => t.id === state.activeTabId);
+            if (active) {
+                active.layers = JSON.parse(JSON.stringify(state.layers));
+                active.folders = JSON.parse(JSON.stringify(state.folders));
+                    active.folderOrder = JSON.parse(JSON.stringify(state.folderOrder || []));
+                active.guides = JSON.parse(JSON.stringify(state.guides));
+                active.history = state.history;
+                active.historyStep = state.historyStep;
+            }
+            localStorage.setItem('fgc_pro_save', JSON.stringify({
+                tabs: state.tabs,
+                activeTabId: state.activeTabId,
+                settings: { format: state.format, linked: state.linked }
+            }));
+        }, 5000);
 
         // =========================================================
         // --- SISTEMA DE REGLAS Y GUÍAS ---
@@ -5545,6 +6094,62 @@
         setTimeout(() => {
             channel.postMessage({ type: 'REQUEST_STATE' });
         }, 500);
+
+        // --- MENÚ DEL BOTÓN + DE PESTAÑAS ---
+        function toggleTabMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('tab-add-menu');
+            const btn  = document.getElementById('tab-add-btn');
+            const isOpen = menu.classList.contains('show');
+            if (isOpen) {
+                closeTabMenu();
+            } else {
+                menu.classList.add('show');
+                btn.classList.add('menu-open');
+            }
+        }
+
+        function closeTabMenu() {
+            const menu = document.getElementById('tab-add-menu');
+            const btn  = document.getElementById('tab-add-btn');
+            if (menu) menu.classList.remove('show');
+            if (btn)  btn.classList.remove('menu-open');
+        }
+
+        // Cerrar menú al hacer clic en cualquier parte fuera de él
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('tab-add-menu');
+            const btn  = document.getElementById('tab-add-btn');
+            if (menu && menu.classList.contains('show')) {
+                if (!menu.contains(e.target) && e.target !== btn) {
+                    closeTabMenu();
+                }
+            }
+
+            const actionMenu = document.getElementById('tab-action-menu');
+            if (actionMenu && actionMenu.classList.contains('show')) {
+                if (!actionMenu.contains(e.target)) {
+                    closeTabActionMenu();
+                }
+            }
+        });
+
+        // Cerrar menú con Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const menu = document.getElementById('tab-add-menu');
+                if (menu && menu.classList.contains('show')) {
+                    closeTabMenu();
+                    e.stopPropagation();
+                }
+
+                const actionMenu = document.getElementById('tab-action-menu');
+                if (actionMenu && actionMenu.classList.contains('show')) {
+                    closeTabActionMenu();
+                    e.stopPropagation();
+                }
+            }
+        }, true); // captura antes del handler global de keydown
 
         init();
     </script>

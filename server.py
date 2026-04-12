@@ -11,6 +11,13 @@ log_queue = queue.Queue(maxsize=500)
 SERVER_START_TIME = time.time()
 request_counter = {"total": 0, "timestamps": []}
 
+# --- Cargar assets incrustados si existen (.exe) ---
+try:
+    import embedded_html
+    HAS_EMBEDDED = True
+except ImportError:
+    HAS_EMBEDDED = False
+
 # --- Detección de modo empaquetado (.exe) ---
 IS_FROZEN = getattr(sys, "frozen", False)
 
@@ -54,6 +61,17 @@ BASE_DIR = get_base_dir()
 DATA_DIR = get_data_dir()
 
 class FGCHandler(http.server.SimpleHTTPRequestHandler):
+
+    def handle(self):
+        try:
+            super().handle()
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
+        except OSError as e:
+            if getattr(e, 'winerror', None) in (10053, 10054):
+                pass
+            else:
+                super().handle_error(self.request, self.client_address)
 
     def __init__(self, *args, **kwargs):
         # Servir archivos estáticos desde BASE_DIR
@@ -106,6 +124,23 @@ class FGCHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(overlays).encode())
             return
 
+        # Interceptar peticiones de HTML embbedidos (con soporte JS)
+        req_file = urllib.parse.unquote(parsed.path.lstrip('/'))
+        if HAS_EMBEDDED and req_file in ('arquitecto.html', 'controlador.html', 'Panel.html', 'gui_main.html', 'gui_splash.html', 'tailwind.js'):
+            data = embedded_html.get_asset(req_file)
+            if data:
+                self.send_response(200)
+                ext = req_file.split('.')[-1]
+                ctype = 'application/javascript' if ext == 'js' else 'text/html; charset=utf-8'
+                self.send_header('Content-Type', ctype)
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                try:
+                    self.wfile.write(data)
+                except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+                    pass
+                return
+
         # Servir archivos de carpetas del usuario desde DATA_DIR
         # (overlays, banderas, escudos, redes viven al lado del .exe)
         user_folders = ('/overlays/', '/banderas/', '/escudos/', '/redes/')
@@ -128,8 +163,11 @@ class FGCHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-Type', content_types.get(ext, 'application/octet-stream'))
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-                with open(file_path, 'rb') as f:
-                    self.wfile.write(f.read())
+                try:
+                    with open(file_path, 'rb') as f:
+                        self.wfile.write(f.read())
+                except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+                    pass
                 return
             else:
                 self.send_error(404, 'File not found')
@@ -170,12 +208,15 @@ if __name__ == '__main__':
         ("Panel de Datos", "Base de datos", f"http://localhost:{PORT}/Panel.html"),
     ]
 
+    class ReusableTCPServer(socketserver.TCPServer):
+        allow_reuse_address = True
+
     def start_server():
         """Inicia el servidor HTTP en un hilo secundario (daemon)."""
         max_retries = 5
         for i in range(max_retries):
             try:
-                with socketserver.TCPServer(('', PORT), FGCHandler) as httpd:
+                with ReusableTCPServer(('', PORT), FGCHandler) as httpd:
                     print(f"Servidor iniciado en el puerto {PORT}.")
                     httpd.serve_forever()
             except OSError as e:
@@ -235,8 +276,17 @@ if __name__ == '__main__':
                 self.web_view.page().setBackgroundColor(Qt.transparent)
                 self.web_view.resize(width, height)
                 
-                local_url = QUrl.fromLocalFile(os.path.join(BASE_DIR, html_file))
-                self.web_view.load(local_url)
+                if HAS_EMBEDDED:
+                    data = embedded_html.get_asset(html_file)
+                    if data:
+                        self.web_view.setHtml(data.decode('utf-8'), QUrl(f"http://localhost:{PORT}/"))
+                    else:
+                        local_url = QUrl.fromLocalFile(os.path.join(BASE_DIR, html_file))
+                        self.web_view.load(local_url)
+                else:
+                    local_url = QUrl.fromLocalFile(os.path.join(BASE_DIR, html_file))
+                    self.web_view.load(local_url)
+                    
                 self.web_view.setZoomFactor(1.0)
                 
                 # Timer estático para garantizar que se muestran las animaciones css (4s + 2.2s delay)
@@ -272,8 +322,17 @@ if __name__ == '__main__':
 
                 self.web_view = QWebEngineView()
                 
-                local_url = QUrl.fromLocalFile(os.path.join(BASE_DIR, html_file))
-                self.web_view.load(local_url)
+                if HAS_EMBEDDED:
+                    data = embedded_html.get_asset(html_file)
+                    if data:
+                        self.web_view.setHtml(data.decode('utf-8'), QUrl(f"http://localhost:{PORT}/"))
+                    else:
+                        local_url = QUrl.fromLocalFile(os.path.join(BASE_DIR, html_file))
+                        self.web_view.load(local_url)
+                else:
+                    local_url = QUrl.fromLocalFile(os.path.join(BASE_DIR, html_file))
+                    self.web_view.load(local_url)
+                    
                 layout.addWidget(self.web_view)
 
                 self.web_view.loadFinished.connect(self._on_load_finished)
@@ -285,6 +344,11 @@ if __name__ == '__main__':
             def _on_load_finished(self, ok):
                 if ok:
                     print("Interfaz gráfica cargada. Iniciando monitores de sistema...")
+                    
+                    if HAS_PSUTIL:
+                        self.current_freq = 0
+                        # CPU poller eliminado para evitar consumos y posibles bloqueos locales
+
                     # Interceptar clicks para open url
                     js_code = """
                     (function() {
@@ -382,14 +446,7 @@ if __name__ == '__main__':
                         ram_desc = f"Disponible {avail_gb:.1f} GB de {total_gb:.1f} GB"
                     except:
                         pass
-                    try:
-                        cpu = psutil.cpu_percent(interval=None)
-                        cpu_str = f"{cpu:.0f}"
-                        freq = psutil.cpu_freq().current
-                        # Frecuencia en GHz
-                        cpu_desc = f"Velocidad de base: {freq/1000:.2f} GHz"
-                    except:
-                        pass
+                    # CPU lectura eliminada
                 
                 logs_arr = []
                 while not log_queue.empty():
@@ -415,13 +472,6 @@ if __name__ == '__main__':
                     if(elRam) elRam.innerText = '{ram_str}';
                     if(elRamBar && '{ram_str}' !== 'N/A') elRamBar.style.width = '{ram_str}%';
                     if(elRamDesc) elRamDesc.innerText = '{ram_desc}';
-
-                    let elCpu = document.getElementById('cpu-val');
-                    let elCpuBar = document.getElementById('cpu-bar');
-                    let elCpuDesc = document.getElementById('cpu-desc');
-                    if(elCpu && '{cpu_str}' !== 'N/A') elCpu.innerText = '{cpu_str}';
-                    if(elCpuBar && '{cpu_str}' !== 'N/A') elCpuBar.style.width = '{cpu_str}%';
-                    if(elCpuDesc) elCpuDesc.innerText = '{cpu_desc}';
 
                     let new_logs = {logs_js};
                     if(new_logs.length > 0 && typeof addTerminalLog === 'function') {{
@@ -467,7 +517,8 @@ if __name__ == '__main__':
         max_retries = 5
         for i in range(max_retries):
             try:
-                with socketserver.TCPServer(('', PORT), FGCHandler) as httpd:
+                with ReusableTCPServer(('', PORT), FGCHandler) as httpd:
+                    print("\n[ÉXITO] ¡Conexión exitosa! El servidor de ahorro está corriendo en segundo plano.")
                     httpd.serve_forever()
             except OSError as e:
                 import time

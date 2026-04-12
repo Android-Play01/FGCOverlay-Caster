@@ -11,13 +11,7 @@ a = Analysis(
     pathex=[PROJECT_DIR],
     binaries=[],
     datas=[
-        # Archivos HTML (empaquetados dentro de _internal/)
-        (os.path.join(PROJECT_DIR, 'Panel.html'), '.'),
-        (os.path.join(PROJECT_DIR, 'controlador.html'), '.'),
-        (os.path.join(PROJECT_DIR, 'arquitecto.html'), '.'),
-        (os.path.join(PROJECT_DIR, 'tailwind.js'), '.'),
-        (os.path.join(PROJECT_DIR, 'gui_splash.html'), '.'),
-        (os.path.join(PROJECT_DIR, 'gui_main.html'), '.'),
+        # Archivos HTML (ahora empaquetados en memoria)
         (os.path.join(PROJECT_DIR, 'assets', '*'), 'assets'),
         # banderas/, escudos/, redes/ van al lado del .exe (copiadas por COMPILAR.bat)
     ],

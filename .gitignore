@@ -13,5 +13,5 @@ _internal/
 # Otros
 .vscode/
 .idea/
-dist.rar
+*.rar
 gui_main (stitch).html

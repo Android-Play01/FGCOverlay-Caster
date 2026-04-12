@@ -71,7 +71,7 @@
       "colorL": "#ff5252",
       "align": "center",
       "shadow": true,
-      "visible": false,
+      "visible": true,
       "locked": false,
       "opacity": 1,
       "text": "",
@@ -131,7 +131,7 @@
       "colorL": "#ff5252",
       "align": "center",
       "shadow": true,
-      "visible": false,
+      "visible": true,
       "locked": false,
       "opacity": 1,
       "text": "",
@@ -191,7 +191,7 @@
       "colorL": "#ff5252",
       "align": "center",
       "shadow": true,
-      "visible": false,
+      "visible": true,
       "locked": false,
       "opacity": 1,
       "text": "",
@@ -251,7 +251,7 @@
       "colorL": "#ff5252",
       "align": "center",
       "shadow": true,
-      "visible": false,
+      "visible": true,
       "locked": false,
       "opacity": 1,
       "text": "",
@@ -375,7 +375,7 @@
       "visible": true,
       "locked": false,
       "opacity": 1,
-      "text": "Grand Finals",
+      "text": "Winners Round 1",
       "src": "",
       "mask": "classic",
       "clipPoints": [
@@ -617,7 +617,7 @@
       "visible": true,
       "locked": false,
       "opacity": 1,
-      "text": "Android Play [L]",
+      "text": "e",
       "src": "",
       "mask": "classic",
       "clipPoints": [
@@ -968,7 +968,7 @@
       "visible": true,
       "locked": false,
       "opacity": 1,
-      "text": "RaeZe [W]",
+      "text": "l [L]",
       "src": "",
       "mask": "classic",
       "clipPoints": [
@@ -1030,7 +1030,7 @@
       "locked": false,
       "opacity": 1,
       "text": "",
-      "src": "./escudos/Bandits_Gaming_darkmode.png",
+      "src": "",
       "mask": "minimal",
       "clipPoints": [
         {
@@ -1274,7 +1274,7 @@
     }
   ],
   "settings": {
-    "format": "FT",
-    "linked": true
+    "format": "BO",
+    "linked": false
   }
 }
