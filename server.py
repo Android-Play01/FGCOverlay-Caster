@@ -21,17 +21,53 @@ except ImportError:
 # --- Detección de modo empaquetado (.exe) ---
 IS_FROZEN = getattr(sys, "frozen", False)
 
-# Redirigir stdout/stderr para capturar logs en la interfaz.
+# Redirigir stdout/stderr para capturar logs y arreglar crashes de WebEngine en .exe
+try:
+    _devnull = open(os.devnull, "w")
+except Exception:
+    _devnull = None
+
 class LogEmitter:
+    def __init__(self, original_stream):
+        self.original_stream = original_stream
+
     def write(self, text):
         if text.strip():
             timestamp = time.strftime("%H:%M:%S")
-            log_queue.put_nowait(f"[{timestamp}] {text.strip()}")
-    def flush(self):
-        pass
+            try:
+                log_queue.put_nowait(f"[{timestamp}] {text.strip()}")
+            except queue.Full:
+                try:
+                    log_queue.get_nowait() # Remove oldest to make room
+                    log_queue.put_nowait(f"[{timestamp}] {text.strip()}")
+                except queue.Empty:
+                    pass
+        if self.original_stream:
+            try:
+                self.original_stream.write(text)
+            except Exception:
+                pass
 
-sys.stdout = LogEmitter()
-sys.stderr = LogEmitter()
+    def flush(self):
+        if self.original_stream:
+            try:
+                self.original_stream.flush()
+            except Exception:
+                pass
+
+    def fileno(self):
+        if self.original_stream and hasattr(self.original_stream, 'fileno'):
+            try:
+                return self.original_stream.fileno()
+            except Exception:
+                pass
+        if _devnull:
+            return _devnull.fileno()
+        raise OSError("fileno no soportado")
+
+# Mantener la referencia al stream original (o devnull) para evitar que PySide se cuelgue al pedir el fileno()
+sys.stdout = LogEmitter(getattr(sys, 'stdout', None) or _devnull)
+sys.stderr = LogEmitter(getattr(sys, 'stderr', None) or _devnull)
 
 # Imprimir banner inicial para que aparezca en los logs de la interfaz
 print("=" * 40)
@@ -208,8 +244,40 @@ if __name__ == '__main__':
         ("Panel de Datos", "Base de datos", f"http://localhost:{PORT}/Panel.html"),
     ]
 
-    class ReusableTCPServer(socketserver.TCPServer):
+    def kill_port_holder(port):
+        """Mata cualquier proceso que esté usando el puerto indicado.
+        Esto evita que instancias zombies del .exe anterior bloqueen el arranque."""
+        try:
+            CREATE_NO_WINDOW = 0x08000000
+            result = subprocess.run(
+                ['netstat', '-ano'],
+                capture_output=True, text=True, timeout=5,
+                creationflags=CREATE_NO_WINDOW
+            )
+            for line in result.stdout.splitlines():
+                # Buscar líneas LISTENING en el puerto exacto
+                if f':{port} ' in line and 'LISTENING' in line:
+                    parts = line.split()
+                    pid = int(parts[-1])
+                    # No matarse a sí mismo
+                    if pid != os.getpid() and pid != 0:
+                        print(f"Matando proceso zombie en puerto {port} (PID {pid})...")
+                        subprocess.run(['taskkill', '/F', '/PID', str(pid)],
+                                       capture_output=True, timeout=5,
+                                       creationflags=CREATE_NO_WINDOW)
+                        time.sleep(0.5)  # Dar tiempo al SO para liberar el socket
+        except Exception as ex:
+            print(f"Aviso: No se pudo limpiar el puerto {port}: {ex}")
+
+    # --- Liberar el puerto antes de intentar arrancarlo ---
+    kill_port_holder(PORT)
+
+    class ReusableTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         allow_reuse_address = True
+        daemon_threads = True
+
+    # --- Evento para saber cuándo el servidor está realmente listo ---
+    server_ready = threading.Event()
 
     def start_server():
         """Inicia el servidor HTTP en un hilo secundario (daemon)."""
@@ -217,6 +285,7 @@ if __name__ == '__main__':
         for i in range(max_retries):
             try:
                 with ReusableTCPServer(('', PORT), FGCHandler) as httpd:
+                    server_ready.set()  # Señal: servidor listo
                     print(f"Servidor iniciado en el puerto {PORT}.")
                     httpd.serve_forever()
             except OSError as e:
@@ -242,10 +311,6 @@ if __name__ == '__main__':
     # --- Selección de Modo: GUI o Consola ---
     # Se entra en modo GUI si está congelado (.exe) Y NO se ha pasado el argumento --console
     if IS_FROZEN and "--console" not in sys.argv:
-        # Modificaciones para evitar crashes en webengine si stderr es None
-        if sys.stderr is None:
-            sys.stderr = open(os.devnull, "w")
-
         from PySide6.QtGui import QIcon
         from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout
         from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -255,6 +320,16 @@ if __name__ == '__main__':
         # Iniciar servidor en thread daemon
         server_thread = threading.Thread(target=start_server, daemon=True)
         server_thread.start()
+
+        # Esperar hasta 10 segundos a que el servidor HTTP esté listo
+        if not server_ready.wait(timeout=10):
+            # Si no pudo arrancar, loguear error y salir
+            log_path = os.path.join(DATA_DIR, 'server_error.log')
+            with open(log_path, 'w', encoding='utf-8') as f:
+                f.write(f"El servidor no pudo arrancar en el puerto {PORT} después de 10 segundos.\n")
+                f.write("Posible causa: otro programa ocupa el puerto o el firewall lo bloquea.\n")
+            # Aún así intentamos continuar, tal vez carga un poco más tarde
+            print("ADVERTENCIA: El servidor tardó demasiado en arrancar.")
 
         app = QApplication(sys.argv)
  
@@ -293,6 +368,11 @@ if __name__ == '__main__':
                 QTimer.singleShot(6500, self.start_main_app)
 
             def start_main_app(self):
+                if not server_ready.is_set():
+                    # El servidor aún no está listo, esperar un poco más
+                    print("Servidor aún no listo, esperando...")
+                    QTimer.singleShot(1000, self.start_main_app)
+                    return
                 self.main_win = MainWindow("gui_main.html", 1466, 841)
                 self.main_win.show()
                 self.close()
@@ -321,17 +401,19 @@ if __name__ == '__main__':
                 layout.setSpacing(0)
 
                 self.web_view = QWebEngineView()
-                
-                if HAS_EMBEDDED:
-                    data = embedded_html.get_asset(html_file)
-                    if data:
-                        self.web_view.setHtml(data.decode('utf-8'), QUrl(f"http://localhost:{PORT}/"))
-                    else:
-                        local_url = QUrl.fromLocalFile(os.path.join(BASE_DIR, html_file))
-                        self.web_view.load(local_url)
-                else:
-                    local_url = QUrl.fromLocalFile(os.path.join(BASE_DIR, html_file))
-                    self.web_view.load(local_url)
+
+                # FIX PARPADEO: Ocultar el WebView hasta que la página cargue
+                # completamente. Esto elimina el flash blanco/gris en laptops
+                # con gráficos integrados donde el render es más lento.
+                self.web_view.setVisible(False)
+                self.web_view.page().setBackgroundColor(Qt.GlobalColor.black)
+
+                # FIX PARPADEO: Cargar siempre via URL del servidor local en
+                # lugar de setHtml(). setHtml() causa un doble-render porque
+                # el WebEngine primero pinta el HTML en memoria y luego resuelve
+                # los recursos externos via red, produciendo dos frames visibles.
+                # Cargando via URL, todo sucede en un solo ciclo de red/render.
+                self.web_view.load(QUrl(f"http://localhost:{PORT}/{html_file}"))
                     
                 layout.addWidget(self.web_view)
 
@@ -342,6 +424,9 @@ if __name__ == '__main__':
                 self.stats_timer.timeout.connect(self.update_stats)
 
             def _on_load_finished(self, ok):
+                # Siempre revelar el WebView, incluso si hubo errores menores de JS.
+                # Antes solo se mostraba con ok=True, lo que causaba pantalla negra permanente.
+                self.web_view.setVisible(True)
                 if ok:
                     print("Interfaz gráfica cargada. Iniciando monitores de sistema...")
                     

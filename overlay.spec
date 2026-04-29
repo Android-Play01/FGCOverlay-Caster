@@ -11,11 +11,25 @@ a = Analysis(
     pathex=[PROJECT_DIR],
     binaries=[],
     datas=[
-        # Archivos HTML (ahora empaquetados en memoria)
+        # Archivos de assets empaquetados
         (os.path.join(PROJECT_DIR, 'assets', '*'), 'assets'),
         # banderas/, escudos/, redes/ van al lado del .exe (copiadas por COMPILAR.bat)
     ],
-    hiddenimports=['psutil', 'PySide6'],
+    hiddenimports=[
+        # psutil
+        'psutil',
+        # PySide6 - hay que listar los submódulos explícitamente,
+        # 'PySide6' genérico NO funciona con PyInstaller
+        'PySide6.QtCore',
+        'PySide6.QtGui',
+        'PySide6.QtWidgets',
+        'PySide6.QtWebEngineWidgets',
+        'PySide6.QtWebEngineCore',
+        'PySide6.QtWebChannel',
+        'PySide6.QtNetwork',
+        'PySide6.QtPrintSupport',
+        'PySide6.QtPositioning',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
